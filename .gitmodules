@@ -4,3 +4,6 @@
 [submodule "tools/macrel"]
 	path = tools/macrel
 	url = https://github.com/BigDataBiology/macrel
+[submodule "tools/amPEPpy"]
+	path = tools/amPEPpy
+	url = https://github.com/tlawrence3/amPEPpy
