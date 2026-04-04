@@ -1,3 +1,6 @@
 [submodule "tools/amp-scanner-v2"]
 	path = tools/amp-scanner-v2
 	url = https://github.com/dan-veltri/amp-scanner-v2.git
+[submodule "tools/macrel"]
+	path = tools/macrel
+	url = https://github.com/BigDataBiology/macrel
