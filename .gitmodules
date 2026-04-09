@@ -10,3 +10,6 @@
 [submodule "tools/LMPred_AMP_Prediction"]
 	path = tools/LMPred_AMP_Prediction
 	url = https://github.com/williamdee1/LMPred_AMP_Prediction.git
+[submodule "tools/AMPlify"]
+	path = tools/AMPlify
+	url = https://github.com/BirolLab/AMPlify.git
