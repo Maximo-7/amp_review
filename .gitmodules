@@ -13,3 +13,6 @@
 [submodule "tools/AMPlify"]
 	path = tools/AMPlify
 	url = https://github.com/BirolLab/AMPlify.git
+[submodule "tools/c_AMPs-prediction"]
+	path = tools/c_AMPs-prediction
+	url = https://github.com/mayuefine/c_AMPs-prediction.git
