@@ -1,21 +1,6 @@
-[submodule "tools/amp-scanner-v2"]
-	path = tools/amp-scanner-v2
-	url = https://github.com/dan-veltri/amp-scanner-v2.git
-[submodule "tools/macrel"]
-	path = tools/macrel
-	url = https://github.com/BigDataBiology/macrel
 [submodule "tools/amPEPpy"]
 	path = tools/amPEPpy
 	url = https://github.com/tlawrence3/amPEPpy
-[submodule "tools/LMPred_AMP_Prediction"]
-	path = tools/LMPred_AMP_Prediction
-	url = https://github.com/williamdee1/LMPred_AMP_Prediction.git
-[submodule "tools/AMPlify"]
-	path = tools/AMPlify
-	url = https://github.com/BirolLab/AMPlify.git
 [submodule "tools/c_AMPs-prediction"]
 	path = tools/c_AMPs-prediction
 	url = https://github.com/mayuefine/c_AMPs-prediction.git
-[submodule "tools/AMP-BERT"]
-	path = tools/AMP-BERT
-	url = https://github.com/GIST-CSBL/AMP-BERT.git
