@@ -16,3 +16,6 @@
 [submodule "tools/c_AMPs-prediction"]
 	path = tools/c_AMPs-prediction
 	url = https://github.com/mayuefine/c_AMPs-prediction.git
+[submodule "tools/AMP-BERT"]
+	path = tools/AMP-BERT
+	url = https://github.com/GIST-CSBL/AMP-BERT.git
