@@ -1,7 +1,8 @@
 # Adapted from fine-tune_with_amps.ipynb
 # Source: https://github.com/GIST-CSBL/AMP-BERT
 # Changes: converted to script, adjusted routes, commented prediction lines,
-# uncommented save_model line, added sys.argv functionality
+# uncommented save_model line, added sys.argv functionality, changed
+# 'evaluation_strategy' to 'eval_strategy'
 
 # In[1]:
 
@@ -18,7 +19,7 @@ print(device)
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from torch.utils.data import Dataset, DataLoader
 
-from transformers import AutoTokenizer, Trainer, TrainingArguments, AutoModelForSequenceClassification, AdamW
+from transformers import AutoTokenizer, Trainer, TrainingArguments, AutoModelForSequenceClassification
 
 
 # In[2]:
@@ -115,7 +116,7 @@ training_args = TrainingArguments(
     logging_steps=100,               
     do_train=True,                   
     do_eval=True,                   
-    evaluation_strategy="no",    
+    eval_strategy="no",    # renamed from evaluation_strategy
     save_strategy='no',
     gradient_accumulation_steps=64,  
     fp16=True,                       
