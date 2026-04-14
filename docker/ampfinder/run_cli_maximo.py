@@ -85,7 +85,7 @@ def parse_args():
                         help="Path to input FASTA file.")
     parser.add_argument("--output",    required=True,
                         help="Path to output CSV file.")
-    parser.add_argument("--model",     default="/app/ampfinder/qt5/model/AMPFinder.identify.rf",
+    parser.add_argument("--model",     default="/app/ampfinder/models/ampfinder/AMPFinder.identify.rf",
                         help="Path to the AMPFinder RF model.")
     parser.add_argument("--threshold", type=float, default=0.5,
                         help="Probability threshold (default: 0.5).")

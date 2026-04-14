@@ -18,14 +18,7 @@ RUN pip install --no-cache-dir \
     protlearn==0.0.3 \
     joblib==1.3.2
 
-COPY tools/AMPFinder/qt5/model/AMPFinder.identify.zip \
-     /app/ampfinder/qt5/model/AMPFinder.identify.zip
+COPY models/ampfinder/AMPFinder.identify.rf \
+     /app/ampfinder/models/ampfinder/AMPFinder.identify.rf
 
 COPY docker/ampfinder/run_cli_maximo.py /app/ampfinder/run_cli_maximo.py
-
-# Install unzip
-RUN apt-get update && apt-get install -y unzip && rm -rf /var/lib/apt/lists/*
-
-RUN unzip /app/ampfinder/qt5/model/AMPFinder.identify.zip \
-    -d /app/ampfinder/qt5/model \
-    && rm /app/ampfinder/qt5/model/AMPFinder.identify.zip

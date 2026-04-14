@@ -4,6 +4,3 @@
 [submodule "tools/c_AMPs-prediction"]
 	path = tools/c_AMPs-prediction
 	url = https://github.com/mayuefine/c_AMPs-prediction.git
-[submodule "tools/AMPFinder"]
-	path = tools/AMPFinder
-	url = https://github.com/abcair/AMPFinder.git
