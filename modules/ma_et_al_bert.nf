@@ -5,7 +5,7 @@
 
 process maEtAlBert {
 
-    container 'alvaromaximo/ma_et_al_bert:1.0'
+    container 'alvaromaximo/ma_et_al_bert:1.1'
 
     input:
     path input_fasta

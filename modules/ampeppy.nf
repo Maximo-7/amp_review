@@ -5,7 +5,7 @@
 
 process ampeppy {
 
-    container 'alvaromaximo/ampeppy:1.0'
+    container 'alvaromaximo/ampeppy:1.1'
 
     input:
     path input_fasta
@@ -17,7 +17,7 @@ process ampeppy {
     script:
     """
     ampep predict \
-        -m /app/amPEPpy/pretrained_models/amPEP.model \
+        -m /app/ampeppy/pretrained_models/amPEP.model \
         -i "${input_fasta}" \
         -o ampeppy_predictions.tsv \
         --seed 2012
