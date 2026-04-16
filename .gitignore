@@ -7,3 +7,7 @@ work/
 
 # Results (generated data, not code)
 results/
+
+# Models (usually heavy files)
+models/*
+!models/README.md

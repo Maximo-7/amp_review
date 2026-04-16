@@ -13,7 +13,10 @@ RUN pip install --no-cache-dir \
     numpy==1.16.2 \
     h5py==2.9.0
 
-COPY tools/c_AMPs-prediction /app/ma_et_al
+# GitHub repository
+RUN git clone https://github.com/mayuefine/c_AMPs-prediction.git /app/ma_et_al \
+    && cd /app/ma_et_al \
+    && git checkout cf7658bc5d504ba6d996fa7b152270e38275dc46
 COPY docker/ma_et_al_att_lstm/result_maximo.pl /app/ma_et_al/script/result_maximo.pl
 
 WORKDIR /app/ma_et_al

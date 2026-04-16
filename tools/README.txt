@@ -1,1 +1,0 @@
-This folder contains the necessary repositories utilized in the dockerfiles.

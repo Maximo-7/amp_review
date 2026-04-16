@@ -7,7 +7,10 @@ RUN mamba create -y -n ma_et_al_bert -c conda-forge \
 
 ENV PATH="/opt/conda/envs/ma_et_al_bert/bin:$PATH"
 
-COPY tools/c_AMPs-prediction /app/ma_et_al
+# GitHub repository
+RUN git clone https://github.com/mayuefine/c_AMPs-prediction.git /app/ma_et_al \
+    && cd /app/ma_et_al \
+    && git checkout cf7658bc5d504ba6d996fa7b152270e38275dc46
 COPY models/ma_et_al/bert.bin /app/ma_et_al/Models/bert.bin
 
 WORKDIR /app/ma_et_al
