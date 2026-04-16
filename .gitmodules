@@ -1,9 +1,0 @@
-[submodule "tools/amPEPpy"]
-	path = tools/amPEPpy
-	url = https://github.com/tlawrence3/amPEPpy
-[submodule "tools/c_AMPs-prediction"]
-	path = tools/c_AMPs-prediction
-	url = https://github.com/mayuefine/c_AMPs-prediction.git
-[submodule "tools/PepNet"]
-	path = tools/PepNet
-	url = https://github.com/hjy23/PepNet.git
