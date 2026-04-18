@@ -11,3 +11,7 @@ results/
 # Models (usually heavy files)
 models/*
 !models/README.md
+
+# Uniprot unreviewed sequences (large FASTA)
+# Added .zip instead
+data/raw/nonAMP_UniProt/uniprotkb_length_5_TO_255_NOT_keyword_K_2025_11_07_unreviewed.fasta
