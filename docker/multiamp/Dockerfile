@@ -10,7 +10,7 @@ RUN pip install --no-cache-dir \
     fair-esm==2.0.0 \
     biopython==1.85 \
     torch-geometric==2.6.1 \
-    torchcrf==1.1.0 \
+    pytorch-crf==0.7.2 \
     scikit-learn==1.6.1 \
     pandas==2.3.3 \
     tqdm==4.67.3 \
