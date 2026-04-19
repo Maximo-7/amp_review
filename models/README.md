@@ -1,37 +1,47 @@
-# Required models (incomplete README)
+# Required models for predictions
 
 This folder contains model files not cloned via git in the docker images utilized in this review.
 - (*) Models trained for this review.
-- (+) Models downloaded from external sources (GitHub, Dropbox, HuggingFace, etc.).
+- (+) Models downloaded from external sources (GitHub, Dropbox, Zenodo or HuggingFace).
 
 ```
 models/
-├── amp_bert/
-│   ├── config.json                                          *
-│   ├── model.safetensors                                    *
-│   └── training_args.bin                                    *
-├── ampfinder/
-│   └── AMPFinder.identify.rf                                +
-├── lmpred/
-│   └── T5XL_UNI_best_model.epoch06-loss0.28.keras           *
-├── ma_et_al/
-│   └── bert.bin                                             +
-├── pepnet/
+├── amp_bert/                                           *
+│   ├── config.json
+│   ├── model.safetensors
+│   └── training_args.bin
+├── ampfinder/                                          +
+│   └── AMPFinder.identify.rf
+├── dlfea4ampgen/                                       +
+│   └── ABP_Best_Model.ckpt
+├── kt_amppred/                                         *
+│   ├── classifier_weights.pth
+│   ├── config.json
+│   └── pytorch_model.bin
+├── lmpred/                                             *
+│   └── T5XL_UNI_best_model.epoch06-loss0.28.keras
+├── ma_et_al/                                           +
+│   └── bert.bin
+├── multiamp/                                           +
+│   └── best_model_overall.pth
+├── pepnet/                                             +
 │   ├── checkpoints/
 │   │   └── 2024_03_27_19_58_59_951/
 │   │       └── model/
-│   │           └── model_final.pth                          +
-│   └── properties.pkl                                       +
-├── prot_t5_xl_half_uniref50-enc/
-│   ├── config.json                                          +
-│   ├── pytorch_model.bin                                    +
+│   │           └── model_final.pth
+│   └── properties.pkl
+├── plapd/                                              *
+│   └── my_best_model_without_embedding.pth
+├── prot_t5_xl_half_uniref50-enc/                       +
+│   ├── config.json
+│   ├── pytorch_model.bin
 │   ├── README.md
-│   ├── special_tokens_map.json                              +
-│   ├── spiece.model                                         +
-│   └── tokenizer_config.json                                +
-├── pyampa/
-│   ├── amp_validate_vectorizer.pkl                          +
-│   └── AMPValidate.pkl                                      +
+│   ├── special_tokens_map.json
+│   ├── spiece.model
+│   └── tokenizer_config.json
+├── pyampa/                                             +
+│   ├── amp_validate_vectorizer.pkl
+│   └── AMPValidate.pkl
 └── README.md
 ```
 
