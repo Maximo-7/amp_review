@@ -15,7 +15,7 @@ def parse_args():
 
     parser.add_argument("--train_tsv", required=True)
     parser.add_argument("--test_tsv", required=True)
-    parser.add_argument("--tokenizer_dir", type=str, default="/app/kt_amppred/prot_t5_xl_half_uniref50-enc")
+    parser.add_argument("--prottrans_dir", type=str, default="/app/kt_amppred/prot_t5_xl_half_uniref50-enc")
     parser.add_argument("--output", type=str, default="finetune_peptide_model", help="Output model directory")
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--epochs", type=int, default=50)
@@ -25,7 +25,7 @@ def parse_args():
 args = parse_args()
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 # Load the tokenizer
-tokenizer = T5Tokenizer.from_pretrained(args.prottrans_model, do_lower_case=False)
+tokenizer = T5Tokenizer.from_pretrained(args.prottrans_dir, do_lower_case=False)
 
 train_sequence = pd.read_csv(args.train_tsv,sep='\t')['text'].tolist()
 test_sequence = pd.read_csv(args.test_tsv,sep='\t')['text'].tolist()
@@ -117,7 +117,7 @@ class PretrainedAndClassifierModel(nn.Module):
         super(PretrainedAndClassifierModel, self).__init__()
 
         # 实例化预训练模型和分类头
-        self.pretrained_model = T5EncoderModel.from_pretrained(args.prottrans_model)
+        self.pretrained_model = T5EncoderModel.from_pretrained(args.prottrans_dir)
         #self.pretrained_model = T5EncoderModel.from_pretrained("finetune_peptide_model_with_best_performance")
         self.classifier_model = ImprovedBinaryClassificationMLP(input_dim=1024, hidden_dims=[512, 256, 128, 64, 32], output_dim=2)
 

@@ -6,7 +6,7 @@
 
 process ampfinder {
 
-    container 'alvaromaximo/ampfinder:1.2'
+    container 'alvaromaximo/ampfinder:1.3'
 
     input:
     path input_fasta

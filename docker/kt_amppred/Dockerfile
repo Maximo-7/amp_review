@@ -19,8 +19,11 @@ RUN pip install --no-cache-dir \
     numpy==1.21.6 \
     pandas==1.3.5 \
     transformers==4.27.3 \
-    sentencepiece==0.1.99
+    sentencepiece==0.1.99 \
+    scikit-learn==1.0.2 \
+    tqdm==4.64.1
 
 COPY models/prot_t5_xl_half_uniref50-enc /app/kt_amppred/prot_t5_xl_half_uniref50-enc
+COPY models/kt_amppred /app/kt_amppred/model
 COPY docker/kt_amppred/main_amp.py /app/kt_amppred/main_amp.py
 COPY docker/kt_amppred/kt_amppred_predict.py /app/kt_amppred/kt_amppred_predict.py

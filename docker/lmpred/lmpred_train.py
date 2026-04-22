@@ -1,6 +1,7 @@
 # Adapted from 2_Build_CNN_Model.ipynb
 # Source: https://github.com/williamdee1/LMPred_AMP_Prediction
-# Changes: removed Google Colab dependencies, added argparse CLI interface.
+# Changes: removed Google Colab dependencies, added argparse CLI interface,
+# fix learning_rate key compatibility issue
 # The model with the best reported performance (T5 trained on UniRef50) was selected
 
 import argparse
@@ -110,7 +111,8 @@ def train_complex_model(X_train, y_train, X_val, y_val,
 
         if i == 1:
             ax2 = ax[i].twinx()
-            ax2.plot(history.history['lr'], color='magenta', linestyle='dotted')
+            lr_key = 'learning_rate' if 'learning_rate' in history.history else 'lr'
+            ax2.plot(history.history[lr_key], color='magenta', linestyle='dotted')
             ax2.set_ylabel('Learning Rate')
             ax2.legend(['Learning Rate'], fancybox=True, framealpha=1,
                        shadow=True, borderpad=1, bbox_to_anchor=(1.0, 0.85))

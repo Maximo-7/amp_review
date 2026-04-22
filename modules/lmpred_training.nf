@@ -1,14 +1,14 @@
 /*
  * LMPred - Train two-layer CNN classifier
  * GitHub: https://github.com/williamdee1/LMPred_AMP_Prediction
- * Optional step: skipped if params.lmpred_skip_training = true
+ * Module for train.nf
  */
 
 process lmpredTraining {
 
     label 'process_gpu'
 
-    container 'alvaromaximo/lmpred:1.0'
+    container 'alvaromaximo/lmpred:1.2'
 
     input:
     path x_train_npy

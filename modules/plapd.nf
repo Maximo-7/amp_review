@@ -7,11 +7,10 @@ process plapd {
 
     label 'process_gpu'
 
-    container 'alvaromaximo/plapd:1.0'
+    container 'alvaromaximo/plapd:1.1'
 
     input:
     path input_fasta
-    path model
 
     output:
     path 'plapd_predictions.csv', emit: predictions
@@ -20,6 +19,6 @@ process plapd {
     """
     python /app/plapd/MyModel.py \
         --input_fasta '${input_fasta}' \
-        --model '${model}'
+        --model /app/plapd/model/my_best_model_without_embedding.pth
     """
 }

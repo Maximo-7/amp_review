@@ -2,14 +2,14 @@
  * PLAPD
  * GitHub: https://github.com/lichaozhang2/PLAPD
  * Train PLAPD classifier, leveraging a pre-trained ESM2 model.
- * Optional step: skipped if params.plapd_skip_training = true
+ * Module for train.nf
  */
 
  process plapdTraining {
 
     label 'process_gpu'
 
-    container 'alvaromaximo/plapd:1.0'
+    container 'alvaromaximo/plapd:1.1'
 
     input:
     path train_csv

@@ -7,12 +7,11 @@ process lmpred {
 
     label 'process_gpu'
 
-    container 'alvaromaximo/lmpred:1.0'
+    container 'alvaromaximo/lmpred:1.3'
 
     input:
     path embeddings_npy
     path ids_csv
-    path model
 
     output:
     path 'lmpred_predictions.csv', emit: predictions
@@ -22,7 +21,7 @@ process lmpred {
     python /app/lmpred/lmpred_predict.py \
         --embeddings_npy '${embeddings_npy}' \
         --ids_csv        '${ids_csv}' \
-        --model_path     '${model}' \
+        --model_path     /app/lmpred/model/T5XL_UNI_best_model.epoch06-loss0.28.keras \
         --output_csv     lmpred_predictions.csv
     """
 }

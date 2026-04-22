@@ -19,6 +19,5 @@ RUN pip install --no-cache-dir \
     joblib==1.3.2
 
 COPY models/ampfinder/AMPFinder.identify.rf \
-     /app/ampfinder/models/ampfinder/AMPFinder.identify.rf
-
+     /app/ampfinder/models/AMPFinder.identify.rf
 COPY docker/ampfinder/run_cli_maximo.py /app/ampfinder/run_cli_maximo.py

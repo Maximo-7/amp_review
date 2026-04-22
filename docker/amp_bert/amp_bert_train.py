@@ -2,12 +2,14 @@
 # Source: https://github.com/GIST-CSBL/AMP-BERT
 # Changes: converted to script, adjusted routes, commented prediction lines,
 # uncommented save_model line, added sys.argv functionality, changed
-# 'evaluation_strategy' to 'eval_strategy'
+# 'evaluation_strategy' to 'eval_strategy', GPU 0 visible
 
 # In[1]:
 
 
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
 import sys
 import pandas as pd
 import numpy as np

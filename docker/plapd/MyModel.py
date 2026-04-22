@@ -48,7 +48,6 @@ def parse_args():
 
     return parser.parse_args()
 
-args = parse_args()
 # ─────────────────────────────────────────────────
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000):
@@ -175,6 +174,8 @@ class AIMP(torch.nn.Module):
         return out, bert_output, pre_feas, transformer_out
 # ─────── Added ───────────────────────────────────
 if __name__ == '__main__':
+    args = parse_args()
+    
     model = AIMP(pre_feas_dim=1280, hidden=1280, n_transformer=1, dropout=0.5)
     model.cuda()
     model.load_state_dict(torch.load(args.model))

@@ -1,7 +1,7 @@
 /*
  * KT-AMPpred, ProtT5-based AMP classifier
  * GitHub: https://github.com/liangxiaodata/AMPpred
- * Optional step: skipped if params.kt_amppred_skip_training = true
+ * Module for train.nf
  * Note: test_tsv is not used to select the best model
  */
 
@@ -9,7 +9,7 @@ process ktAmppredTraining {
 
     label 'process_gpu'
 
-    container 'alvaromaximo/kt_amppred:1.0'
+    container 'alvaromaximo/kt_amppred:1.1'
 
     input:
     path train_tsv
@@ -21,7 +21,7 @@ process ktAmppredTraining {
     script:
     """
     python /app/kt_amppred/main_amp.py \
-        --train_tsv '${train_tsv}'
+        --train_tsv '${train_tsv}' \
         --test_tsv '${test_tsv}'
     """
 }

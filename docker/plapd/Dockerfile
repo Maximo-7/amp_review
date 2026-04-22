@@ -29,5 +29,6 @@ RUN pip install --no-cache-dir \
     biopython==1.83 \
     fair-esm==2.0.0
 
+COPY models/plapd /app/plapd/model
 COPY docker/plapd/MyTrain.py /app/plapd/MyTrain.py
 COPY docker/plapd/MyModel.py /app/plapd/MyModel.py

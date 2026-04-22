@@ -2,14 +2,14 @@
  * AMP-BERT
  * GitHub: https://github.com/GIST-CSBL/AMP-BERT
  * Fine-tuned BertForSequenceClassification model (prot_bert_bfd backbone).
- * Optional step: skipped if params.amp_bert_skip_training = true
+ * Module for train.nf
  */
 
 process ampBertTraining {
 
     label 'process_gpu'
 
-    container 'alvaromaximo/amp_bert:1.1'
+    container 'alvaromaximo/amp_bert:1.2'
 
     input:
     path input_csv

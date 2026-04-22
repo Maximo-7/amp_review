@@ -14,9 +14,10 @@ RUN pip install --no-cache-dir \
     numpy==1.26.4 \
     tqdm==4.66.4 \
     scikit-learn==1.5.0 \
-    accelerate==0.30.0
+    accelerate==1.3.0
 
 WORKDIR /app/amp_bert
 
+COPY models/amp_bert /app/amp_bert/model
 COPY docker/amp_bert/amp_bert_predict.py ./amp_bert_predict.py
 COPY docker/amp_bert/amp_bert_train.py ./amp_bert_train.py

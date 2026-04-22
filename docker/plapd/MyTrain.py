@@ -30,6 +30,7 @@ def parse_args():
     return parser.parse_args()
 
 args = parse_args()
+
 warnings.filterwarnings('ignore')
 set_seed(4)
 device = "cuda:1"
