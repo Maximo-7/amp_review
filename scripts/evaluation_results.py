@@ -1,37 +1,82 @@
 """
 evaluation_results.py
+=====================
 Computes evaluation metrics and generates analysis plots for AMP prediction tools.
 
+Expected project layout (paths relative to project root):
+    data/processed/complete_dataset.csv    -- output of annotate_dataset.py
+    results/evaluation/                    -- output directory for all plots and tables
+
 Analyses:
-    0 - Balanced accuracy bar chart (ordered highest to lowest)
-    1 - Pairwise agreement matrix (lower triangular heatmap)
-    2 - Prediction correctness heatmap with clustering (peptides × tools)
-    3 - Correlation between peptide difficulty and physicochemical properties
+    0  - Balanced accuracy bar chart (ordered highest to lowest)
+    1  - Pairwise agreement matrix (hierarchical clustering heatmap,
+         tool labels coloured by ML vs DL)
+    2  - Prediction correctness heatmap with clustering (peptides x tools),
+         plus side columns for true class and physicochemical properties
+    3a - Spearman correlation between peptide error rate and physicochemical
+         properties
+    3b - Logistic regression for the top-6 models (balanced accuracy):
+         coefficients of physicochemical properties as predictors of each
+         model's predicted label
+
+Run from the project root:
+    python scripts/evaluation_results.py
 """
 
+import warnings
+
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import matplotlib.colors as mcolors
+import matplotlib.colorbar as mcolorbar
+import matplotlib.gridspec as gridspec
+import matplotlib.lines as mlines
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 import seaborn as sns
+from matplotlib import cm
+from matplotlib.patches import Patch, FancyBboxPatch
+from pathlib import Path
 from scipy import stats
+from scipy.cluster.hierarchy import dendrogram, linkage, leaves_list
+from scipy.spatial.distance import pdist
+import statsmodels.api as sm
 from sklearn.metrics import (
-    confusion_matrix, accuracy_score, balanced_accuracy_score,
-    f1_score, matthews_corrcoef, roc_auc_score, roc_curve
+    accuracy_score,
+    balanced_accuracy_score,
+    confusion_matrix,
+    f1_score,
+    matthews_corrcoef,
+    roc_auc_score,
+    roc_curve,
 )
+from sklearn.preprocessing import StandardScaler
 
-# ─── Configuration ────────────────────────────────────────────────────────────
+warnings.filterwarnings("ignore")
 
-DATASET_PATH               = "/home/amaximo/amp_project_alvaro/data/processed/complete_dataset_final.csv"
-OUTPUT_METRICS_PATH        = "/home/amaximo/amp_project_alvaro/results/evaluation/evaluation_metrics.csv"
-OUTPUT_ROC_PATH            = "/home/amaximo/amp_project_alvaro/results/evaluation/roc_curves.png"
-OUTPUT_BEST_PREDICTED_PATH = "/home/amaximo/amp_project_alvaro/results/evaluation/best_predicted_sequences.csv"
-OUTPUT_ANALYSIS_0_PATH     = "/home/amaximo/amp_project_alvaro/results/evaluation/analysis_0_balanced_accuracy.png"
-OUTPUT_ANALYSIS_1_PATH     = "/home/amaximo/amp_project_alvaro/results/evaluation/analysis_1_agreement_matrix.png"
-OUTPUT_ANALYSIS_2_PATH     = "/home/amaximo/amp_project_alvaro/results/evaluation/analysis_2_correctness_heatmap.png"
-OUTPUT_ANALYSIS_3_PATH     = "/home/amaximo/amp_project_alvaro/results/evaluation/analysis_3_property_correlations.png"
+# ---------------------------------------------------------------------------
+# Paths
+# ---------------------------------------------------------------------------
 
-# Tools and their (label_col, prob_col) — None prob means binary only
+ROOT = Path(__file__).resolve().parent.parent
+
+DATASET_PATH               = ROOT / "data" / "processed" / "complete_dataset.csv"
+OUTPUT_METRICS_PATH        = ROOT / "results" / "evaluation" / "evaluation_metrics.csv"
+OUTPUT_ROC_PATH            = ROOT / "results" / "evaluation" / "roc_curves.png"
+OUTPUT_BEST_PREDICTED_PATH = ROOT / "results" / "evaluation" / "best_predicted_sequences.csv"
+OUTPUT_ANALYSIS_0_PATH     = ROOT / "results" / "evaluation" / "analysis_0_balanced_accuracy.png"
+OUTPUT_ANALYSIS_1_PATH     = ROOT / "results" / "evaluation" / "analysis_1_agreement_matrix.png"
+OUTPUT_ANALYSIS_2_PATH     = ROOT / "results" / "evaluation" / "analysis_2_correctness_heatmap.png"
+OUTPUT_ANALYSIS_3A_PATH    = ROOT / "results" / "evaluation" / "analysis_3a_property_correlations.png"
+OUTPUT_ANALYSIS_3B_PATH    = ROOT / "results" / "evaluation" / "analysis_3b_logreg_top6.png"
+OUTPUT_ANALYSIS_3B_CSV     = ROOT / "results" / "evaluation" / "analysis_3b_logreg_top6.csv"
+
+(ROOT / "results" / "evaluation").mkdir(parents=True, exist_ok=True)
+
+# ---------------------------------------------------------------------------
+# Tool definitions
+# ---------------------------------------------------------------------------
+
 TOOLS = {
     "AMP Scanner":      ("AMP_Scanner_pred_label",  "AMP_Scanner_pred_prob"),
     "Macrel":           ("Macrel_pred_label",        "Macrel_pred_prob"),
@@ -53,6 +98,16 @@ TOOLS = {
     "MultiAMP":         ("MultiAMP_pred_label",      "MultiAMP_pred_prob"),
 }
 
+DL_TOOLS = {
+    "AMP Scanner", "LMPred", "AMPlify", "Ma et al. (2022)",
+    "CAMPR4 ANN", "AMP-BERT", "AMPFinder",
+    "PepNet", "KT-AMPpred", "PLAPD", "DLFea4AMPGen", "MultiAMP",
+}
+
+UNKNOWN_TRAINING_TOOLS = {
+    "Ma et al. (2022)", "CAMPR4 ANN", "CAMPR4 RF", "CAMPR4 SVM", "PyAMPA",
+}
+
 MA_ET_AL_PROB_COLS = [
     "Ma_et_al_att_pred_prob",
     "Ma_et_al_bert_pred_prob",
@@ -70,13 +125,38 @@ PHYSICOCHEMICAL_PROPS = [
     "Boman Index",
 ]
 
-# ─── Load data ────────────────────────────────────────────────────────────────
+# Human-readable display names (used in legend and axis labels)
+PROP_DISPLAY_NAMES = {
+    "Sequence_length":   "Sequence length",
+    "Molecular Weight":  "Molecular Weight",
+    "Net Charge (pH 7)": "Net Charge (pH 7)",
+    "Aromaticity":       "Aromaticity",
+    "Instability Index": "Instability Index",
+    "Isoelectric Point": "Isoelectric Point",
+    "GRAVY":             "GRAVY",
+    "Boman Index":       "Boman Index",
+}
+
+COLOR_DL = "#e07b39"   # warm orange  -> deep learning
+COLOR_ML = "#4a90d9"   # steel blue   -> machine learning
+
+# AMP/non-AMP: clearly distinct from both DL (orange) and ML (blue)
+COLOR_AMP    = "#8B0000"   # dark red
+COLOR_NONAMP = "#006400"   # dark green
+
+PROP_CMAPS = ["viridis", "plasma", "coolwarm", "YlOrBr", "PuBu", "RdYlGn", "BrBG", "PuOr"]
+
+# ---------------------------------------------------------------------------
+# Load data
+# ---------------------------------------------------------------------------
 
 df      = pd.read_csv(DATASET_PATH, low_memory=False)
 eval_df = df[df["For_evaluation"]].copy()
 y_true  = eval_df["ABP_from_databases"].astype(int).values
 
-# ─── Metrics computation ──────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Metrics computation
+# ---------------------------------------------------------------------------
 
 def compute_metrics(y_true, y_pred, y_prob=None):
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
@@ -127,7 +207,9 @@ metrics_df = pd.DataFrame(rows)
 metrics_df.to_csv(OUTPUT_METRICS_PATH, index=False)
 print(metrics_df.to_string(index=False))
 
-# ─── ROC curves ──────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# ROC curves
+# ---------------------------------------------------------------------------
 
 fig, ax = plt.subplots(figsize=(10, 8))
 colors  = cm.tab20(np.linspace(0, 1, len(roc_data)))
@@ -147,7 +229,9 @@ plt.savefig(OUTPUT_ROC_PATH, dpi=150)
 plt.close()
 print(f"ROC curves saved to {OUTPUT_ROC_PATH}")
 
-# ─── Best-predicted sequences (extended with per-tool correctness) ────────────
+# ---------------------------------------------------------------------------
+# Best-predicted sequences
+# ---------------------------------------------------------------------------
 
 label_cols     = [label_col for label_col, _ in TOOLS.values()]
 available_cols = [c for c in label_cols if c in eval_df.columns]
@@ -164,10 +248,9 @@ eval_df["n_tools_predicted"] = n_tools_with_pred
 eval_df["n_tools_correct"]   = n_correct
 eval_df["n_tools_wrong"]     = n_wrong
 
-# Add per-tool correctness columns (1 = correct, 0 = wrong, NaN = no prediction)
 for tool_name, (label_col, _) in TOOLS.items():
     if label_col in eval_df.columns:
-        col_name = f"{tool_name}_correct"
+        col_name  = f"{tool_name}_correct"
         pred_vals = pd.to_numeric(eval_df[label_col], errors="coerce")
         eval_df[col_name] = np.where(
             pred_vals.isna(),
@@ -189,49 +272,64 @@ best_predicted.to_csv(OUTPUT_BEST_PREDICTED_PATH, index=False)
 print(f"\nTop 10 best-predicted sequences:")
 print(best_predicted.head(10).to_string(index=False))
 
-# ─── Analysis 0: Balanced accuracy bar chart ─────────────────────────────────
+# ===========================================================================
+# Analysis 0: Balanced accuracy bar chart
+# ===========================================================================
 
 metrics_sorted = metrics_df.sort_values("Balanced Accuracy", ascending=False)
 
-fig, ax = plt.subplots(figsize=(12, 6))
+fig, ax = plt.subplots(figsize=(12, 7))
+bar_colors = [COLOR_DL if t in DL_TOOLS else COLOR_ML for t in metrics_sorted["Model"]]
 bars = ax.bar(
     metrics_sorted["Model"],
     metrics_sorted["Balanced Accuracy"],
-    color=cm.tab20(np.linspace(0, 1, len(metrics_sorted)))
+    color=bar_colors,
 )
 ax.set_xlabel("Tool", fontsize=12)
 ax.set_ylabel("Balanced Accuracy (%)", fontsize=12)
 ax.set_title("Balanced Accuracy by Tool (ordered highest to lowest)", fontsize=14)
-ax.set_ylim([0, 100])
-ax.axhline(50, color="gray", linestyle="--", lw=1, label="Random classifier (50%)")
-ax.legend(fontsize=9)
+ax.set_ylim([0, 110])
+ax.axhline(50, color="gray", linestyle="--", lw=1)
+
+legend_handles = [
+    mpatches.Patch(color=COLOR_DL, label="Deep Learning (DL)"),
+    mpatches.Patch(color=COLOR_ML, label="Machine Learning (ML)"),
+    mlines.Line2D([], [], color="gray", linestyle="--", lw=1.5,
+                  label="Random classifier (50%)"),
+    mlines.Line2D([], [], color="black", marker="$\u2605$", linestyle="none",
+                  markersize=10, label="Training dataset not available"),
+]
+ax.legend(handles=legend_handles, fontsize=9)
 plt.xticks(rotation=45, ha="right", fontsize=9)
 
-for bar, val in zip(bars, metrics_sorted["Balanced Accuracy"]):
-    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.5,
+for bar, (_, row) in zip(bars, metrics_sorted.iterrows()):
+    val  = row["Balanced Accuracy"]
+    tool = row["Model"]
+    ax.text(bar.get_x() + bar.get_width() / 2, val + 0.5,
             f"{val:.1f}", ha="center", va="bottom", fontsize=7)
+    if tool in UNKNOWN_TRAINING_TOOLS:
+        ax.text(bar.get_x() + bar.get_width() / 2, val + 4.0,
+                "\u2605", ha="center", va="bottom", fontsize=12, color="black")
 
 plt.tight_layout()
 plt.savefig(OUTPUT_ANALYSIS_0_PATH, dpi=150)
 plt.close()
 print(f"Analysis 0 saved to {OUTPUT_ANALYSIS_0_PATH}")
 
-# ─── Analysis 1: Pairwise agreement matrix ───────────────────────────────────
-# % of identical predictions between each pair of tools
-# Only sequences where both tools have predictions are considered
-# Tools ordered by balanced accuracy (highest to lowest, as in analysis 0)
+# ===========================================================================
+# Analysis 1: Pairwise agreement matrix
+# ===========================================================================
 
-tool_order  = metrics_sorted["Model"].tolist()
-n_tools     = len(tool_order)
-agreement   = pd.DataFrame(np.nan, index=tool_order, columns=tool_order)
+tool_order = metrics_sorted["Model"].tolist()
+n_tools    = len(tool_order)
+
+agreement = pd.DataFrame(np.nan, index=tool_order, columns=tool_order)
 
 for i, tool_i in enumerate(tool_order):
     label_i = TOOLS[tool_i][0]
     if label_i not in eval_df.columns:
         continue
     for j, tool_j in enumerate(tool_order):
-        if j > i:
-            break
         label_j = TOOLS[tool_j][0]
         if label_j not in eval_df.columns:
             continue
@@ -243,12 +341,24 @@ for i, tool_i in enumerate(tool_order):
         pct     = (preds_i == preds_j).mean() * 100
         agreement.loc[tool_i, tool_j] = pct
 
-# Mask upper triangle
-mask_upper = np.triu(np.ones_like(agreement, dtype=bool), k=1)
+agreement_sym = agreement.copy()
+np.fill_diagonal(agreement_sym.values, 100.0)
+for i in range(n_tools):
+    for j in range(i + 1, n_tools):
+        agreement_sym.iloc[i, j] = agreement_sym.iloc[j, i]
 
-fig, ax = plt.subplots(figsize=(14, 11))
+dist_matrix = 100.0 - agreement_sym.fillna(50).values
+np.fill_diagonal(dist_matrix, 0.0)
+condensed   = pdist(dist_matrix)
+Z           = linkage(condensed, method="average")
+order_idx   = leaves_list(Z)
+
+agreement_clustered = agreement_sym.iloc[order_idx, :].iloc[:, order_idx]
+mask_upper = np.triu(np.ones_like(agreement_clustered, dtype=bool), k=1)
+
+fig, ax = plt.subplots(figsize=(15, 12))
 sns.heatmap(
-    agreement.astype(float),
+    agreement_clustered.astype(float),
     mask=mask_upper,
     annot=True,
     fmt=".1f",
@@ -257,21 +367,45 @@ sns.heatmap(
     vmax=100,
     linewidths=0.5,
     ax=ax,
-    cbar_kws={"label": "Agreement (%)"}
+    annot_kws={"size": 10},
+    cbar_kws={"label": "Agreement (%)"},
 )
-ax.set_title("Pairwise prediction agreement between tools (%)\n"
-             "(tools ordered by balanced accuracy, highest to lowest)", fontsize=13)
-ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right", fontsize=9)
-ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=9)
+
+ax.set_title(
+    "Pairwise prediction agreement between tools (%)\n(hierarchical clustering)",
+    fontsize=19,
+)
+
+for tick_label in ax.get_xticklabels():
+    tick_label.set_color(COLOR_DL if tick_label.get_text() in DL_TOOLS else COLOR_ML)
+for tick_label in ax.get_yticklabels():
+    tick_label.set_color(COLOR_DL if tick_label.get_text() in DL_TOOLS else COLOR_ML)
+
+ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right", fontsize=15)
+ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=15)
+
+legend_handles = [
+    mpatches.Patch(color=COLOR_DL, label="Deep Learning (DL)"),
+    mpatches.Patch(color=COLOR_ML, label="Machine Learning (ML)"),
+]
+ax.legend(handles=legend_handles, loc="upper right", fontsize=15, frameon=True)
+
+cbar = ax.collections[0].colorbar
+cbar.ax.tick_params(labelsize=14)
+cbar.set_label("Agreement (%)", fontsize=15)
+
 plt.tight_layout()
 plt.savefig(OUTPUT_ANALYSIS_1_PATH, dpi=150)
 plt.close()
 print(f"Analysis 1 saved to {OUTPUT_ANALYSIS_1_PATH}")
 
-# ─── Analysis 2: Correctness heatmap with clustering ─────────────────────────
-# Binary matrix: rows = peptides, columns = tools
-# 1 = correct prediction, 0 = wrong, NaN = no prediction
+# ===========================================================================
+# Analysis 2: Correctness heatmap — clustermap with dendrograms for peptides
+#             and tools (Ward linkage), side columns for true class and
+#             physicochemical properties, legend drawn inside a dedicated axes.
+# ===========================================================================
 
+# ── Build per-peptide correctness matrix ─────────────────────────────────
 correctness_data = {}
 for tool_name, (label_col, _) in TOOLS.items():
     if label_col not in eval_df.columns:
@@ -280,143 +414,469 @@ for tool_name, (label_col, _) in TOOLS.items():
     correctness_data[tool_name] = np.where(
         pred_vals.isna(),
         np.nan,
-        (pred_vals == eval_df["ABP_from_databases"].astype(int)).astype(float)
+        (pred_vals == eval_df["ABP_from_databases"].astype(int)).astype(float),
     )
 
 correctness_df = pd.DataFrame(correctness_data, index=eval_df.index)
-
-# Drop peptides with no predictions at all
 correctness_df = correctness_df.dropna(how="all")
 
-# For clustering: fill NaN with 0.5 (neutral) — NaN means no prediction
+eval_sub = eval_df.loc[correctness_df.index].copy()
 correctness_filled = correctness_df.fillna(0.5)
 
-g = sns.clustermap(
-    correctness_filled,
-    cmap=sns.color_palette(["#d73027", "#fee08b", "#1a9850"], as_cmap=True),
-    figsize=(16, 14),
-    row_cluster=True,
-    col_cluster=True,
-    xticklabels=True,
-    yticklabels=False,
-    linewidths=0,
-    cbar_pos=None,           # disable automatic colorbar — we add a discrete legend
-    dendrogram_ratio=(0.1, 0.15),
-)
-g.ax_heatmap.set_xlabel("Tool", fontsize=16)
-g.ax_heatmap.set_ylabel(f"Peptide (n={len(correctness_filled)})", fontsize=16)
-g.ax_heatmap.set_xticklabels(
-    g.ax_heatmap.get_xticklabels(), rotation=45, ha="right", fontsize=15
+# ── Hierarchical clustering ───────────────────────────────────────────────
+row_dist  = pdist(correctness_filled.values, metric="euclidean")
+Z_rows    = linkage(row_dist, method="ward")
+row_order = leaves_list(Z_rows)
+
+col_dist  = pdist(correctness_filled.values.T, metric="euclidean")
+Z_cols    = linkage(col_dist, method="ward")
+col_order = leaves_list(Z_cols)
+
+correctness_plot = correctness_filled.iloc[row_order, col_order]
+eval_plot        = eval_sub.iloc[row_order]
+tools_ordered    = [list(correctness_df.columns)[c] for c in col_order]
+
+# ── Side annotations ──────────────────────────────────────────────────────
+available_props = [p for p in PHYSICOCHEMICAL_PROPS if p in eval_plot.columns]
+
+side_annot_raw = pd.DataFrame(index=eval_plot.index)
+side_annot_raw["Ground truth"] = eval_plot["ABP_from_databases"].astype(float).values
+
+prop_stats = {}
+for prop in available_props:
+    vals = pd.to_numeric(eval_plot[prop], errors="coerce")
+    vmin, vmax = vals.min(), vals.max()
+    vmean = vals.mean()
+    prop_stats[prop] = (vmin, vmean, vmax)
+    side_annot_raw[prop] = (vals - vmin) / (vmax - vmin + 1e-12)
+
+# ── GridSpec layout ───────────────────────────────────────────────────────
+n_side    = 1 + len(available_props)
+n_tools_c = len(tools_ordered)
+
+w_left_dendro = 3
+w_heatmap     = n_tools_c
+w_side        = 1
+w_legend      = 14
+
+col_widths  = [w_left_dendro, w_heatmap] + [w_side] * n_side + [w_legend]
+row_heights = [2, 20]    # top row taller so title fits inside it without overlap
+
+fig_width  = 26 + n_side * 0.6 + w_legend * 0.5
+fig_height = 22
+
+fig = plt.figure(figsize=(fig_width, fig_height))
+gs  = gridspec.GridSpec(
+    2,
+    2 + n_side + 1,
+    height_ratios=row_heights,
+    width_ratios=col_widths,
+    hspace=0.02,
+    wspace=0.03,
 )
 
-# Title above the figure (not overlapping heatmap)
-g.figure.suptitle(
-    "Prediction correctness by peptide and tool (clustered rows and columns)",
-    fontsize=22,
-    y=1.02
-)
+ax_top_dendro   = fig.add_subplot(gs[0, 1])
+ax_left_dendro  = fig.add_subplot(gs[1, 0])
+ax_main         = fig.add_subplot(gs[1, 1])
+ax_sides        = [fig.add_subplot(gs[1, 2 + k]) for k in range(n_side)]
+ax_legend       = fig.add_subplot(gs[:, 2 + n_side])
+ax_legend.set_axis_off()
 
-# Discrete legend outside the heatmap
-from matplotlib.patches import Patch
-legend_elements = [
-    Patch(facecolor="#d73027", label="Incorrect (0)"),
-    Patch(facecolor="#fee08b", label="No prediction (0.5)"),
-    Patch(facecolor="#1a9850", label="Correct (1)"),
-]
-g.ax_heatmap.legend(
-    handles=legend_elements,
-    loc="upper left",
-    bbox_to_anchor=(1.05, 1.0),
-    frameon=True,
+DENDRO_LW = 0.7
+
+# ── Title: drawn inside the top-dendrogram axes row, above the dendrogram ──
+ax_top_dendro.set_title(
+    "Prediction correctness by peptide (rows) and tool (columns)",
     fontsize=18,
-    title="Correctness",
-    title_fontsize=18,
+    fontweight="bold",
+    pad=6,
 )
 
+# ── Top dendrogram ────────────────────────────────────────────────────────
+dendrogram(
+    Z_cols,
+    ax=ax_top_dendro,
+    orientation="top",
+    no_labels=True,
+    color_threshold=0,
+    above_threshold_color="black",
+    link_color_func=lambda k: "black",
+)
+for coll in ax_top_dendro.collections:
+    coll.set_linewidth(DENDRO_LW)
+ax_top_dendro.set_axis_off()
+
+# ── Left dendrogram ───────────────────────────────────────────────────────
+dendrogram(
+    Z_rows,
+    ax=ax_left_dendro,
+    orientation="left",
+    no_labels=True,
+    color_threshold=0,
+    above_threshold_color="black",
+    link_color_func=lambda k: "black",
+)
+for coll in ax_left_dendro.collections:
+    coll.set_linewidth(DENDRO_LW)
+ax_left_dendro.set_axis_off()
+ax_left_dendro.invert_yaxis()
+
+# ── Main heatmap ──────────────────────────────────────────────────────────
+cmap_main = mcolors.LinearSegmentedColormap.from_list(
+    "correctness", ["#d73027", "#fee08b", "#1a9850"]
+)
+ax_main.imshow(
+    correctness_plot.values,
+    aspect="auto",
+    cmap=cmap_main,
+    vmin=0,
+    vmax=1,
+    interpolation="none",
+)
+ax_main.set_yticks([])
+ax_main.set_xticks(range(len(tools_ordered)))
+ax_main.set_xticklabels(tools_ordered, rotation=45, ha="right", fontsize=13)
+ax_main.tick_params(axis="x", bottom=True, top=False, labelbottom=True)
+
+for tick_label in ax_main.get_xticklabels():
+    tick_label.set_color(COLOR_DL if tick_label.get_text() in DL_TOOLS else COLOR_ML)
+
+# ── Side annotation: Ground truth ─────────────────────────────────────────
+cmap_class = mcolors.ListedColormap([COLOR_NONAMP, COLOR_AMP])
+ax_sides[0].imshow(
+    side_annot_raw["Ground truth"].values.reshape(-1, 1),
+    aspect="auto",
+    cmap=cmap_class,
+    vmin=0,
+    vmax=1,
+)
+ax_sides[0].set_xticks([0])
+ax_sides[0].set_xticklabels(["Ground truth"], rotation=45, ha="right", fontsize=11)
+ax_sides[0].set_yticks([])
+
+# ── Side annotations: physicochemical properties ──────────────────────────
+for k, prop in enumerate(available_props):
+    ax_s         = ax_sides[k + 1]
+    prop_data    = side_annot_raw[prop].values.reshape(-1, 1)
+    display_name = PROP_DISPLAY_NAMES.get(prop, prop)
+    ax_s.imshow(
+        prop_data,
+        aspect="auto",
+        cmap=PROP_CMAPS[k % len(PROP_CMAPS)],
+        vmin=0,
+        vmax=1,
+        interpolation="none",
+    )
+    ax_s.set_xticks([0])
+    ax_s.set_xticklabels([display_name], rotation=45, ha="right", fontsize=11)
+    ax_s.set_yticks([])
+
+# ===========================================================================
+# Legend — drawn entirely inside ax_legend using its own coordinate system
+# (axes fraction 0-1).  Gradient bars are true matplotlib Axes added with
+# inset_axes (bbox_transform=ax_legend.transAxes), which guarantees that
+# their pixel positions are correct regardless of figure size.
+# ===========================================================================
+
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes as _inset_axes
+
+# We split the legend axes vertically into a data-structure that describes
+# each block.  Heights are in "units" that we'll map to axes-fraction at the
+# end, once we know the total.
+
+FSEC  = 14    # section-title font size
+FENT  = 13    # entry font size
+FNUM  = 11    # gradient tick-label font size
+
+# Helper: draw a thin horizontal separator line across the legend axes
+def _hline(ax, y, lw=0.8, color="#aaaaaa"):
+    ax.axhline(y, xmin=0.05, xmax=0.95, color=color, linewidth=lw,
+               transform=ax.transData, clip_on=False)
+
+# We build the legend top-to-bottom using a running y position in axes
+# coordinates (1 = top, 0 = bottom).  All drawing uses ax_legend.transAxes.
+
+ax = ax_legend
+ax.set_xlim(0, 1)
+ax.set_ylim(0, 1)
+
+# ── Estimate total height needed so we can set the y-step sizes ────────────
+# Swatch blocks: 3 entries for correctness, 2 for tool type, 2 for ground truth
+# Gradient block: len(available_props) bars
+# We'll use a simple uniform grid: divide [0,1] into logical rows.
+
+n_swatch_rows = 3 + 2 + 2   # correctness + tool type + ground truth entries
+n_grad_rows   = len(available_props)
+# Approximate row heights in normalised units (will be scaled to fit)
+# We give section headers 1.4x a normal row, gradient bars 1.8x
+unit = 1.0 / (
+    4 * 1.4 +           # 4 section headers (correctness, tool, gt, properties)
+    n_swatch_rows * 1.0 +
+    n_grad_rows * 2.2 +
+    5 * 0.4             # inter-block gaps
+)
+H_SEC  = 1.4 * unit   # section-header height
+H_ROW  = 1.0 * unit   # swatch-entry height
+H_GRAD = 2.2 * unit   # gradient bar slot height (name + bar + ticks)
+H_GAP  = 0.4 * unit   # gap between blocks
+
+y = 1.0 - 0.015       # start near top with a small margin
+
+def _section_header(ax, y, text):
+    """Draw a shaded section-header rectangle and bold label. Returns new y."""
+    h = H_SEC
+    # shaded background strip
+    rect = plt.Rectangle((0.02, y - h), 0.96, h,
+                          facecolor="#e0e0e0", edgecolor="#888888",
+                          linewidth=0.8, transform=ax.transAxes, clip_on=False)
+    ax.add_patch(rect)
+    ax.text(0.5, y - h / 2, text,
+            ha="center", va="center", fontsize=FSEC, fontweight="bold",
+            transform=ax.transAxes, clip_on=False)
+    return y - h
+
+def _swatch_entry(ax, y, color, label):
+    """Draw one swatch + label row. Returns new y."""
+    h  = H_ROW
+    yc = y - h / 2
+    # swatch rectangle
+    sw = plt.Rectangle((0.06, yc - h * 0.32), 0.10, h * 0.64,
+                        facecolor=color, edgecolor="#555555", linewidth=0.5,
+                        transform=ax.transAxes, clip_on=False)
+    ax.add_patch(sw)
+    ax.text(0.20, yc, label,
+            ha="left", va="center", fontsize=FENT,
+            transform=ax.transAxes, clip_on=False)
+    return y - h
+
+def _gradient_entry(ax, y, prop, vmin, vmean, vmax, cmap_name):
+    """
+    Draw one gradient bar with property name above and min/mean/max below.
+    The bar is a real Axes added as an inset, anchored to ax.transAxes.
+    Returns new y.
+    """
+    display_name = PROP_DISPLAY_NAMES.get(prop, prop)
+    h     = H_GRAD
+    name_frac = 0.30   # fraction of h for the name
+    bar_frac  = 0.38   # fraction of h for the bar image
+    tick_frac = 0.32   # fraction of h for tick labels
+
+    # Property name
+    y_name = y - name_frac * h / 2
+    ax.text(0.5, y - name_frac * h / 2, display_name,
+            ha="center", va="center", fontsize=FENT, style="italic",
+            transform=ax.transAxes, clip_on=False)
+
+    # Gradient bar as inset axes
+    bar_bottom = y - name_frac * h - bar_frac * h   # bottom of bar in axes coords
+    bar_height = bar_frac * h
+    bar_left   = 0.06
+    bar_width  = 0.88
+
+    ax_bar = ax.inset_axes(
+        [bar_left, bar_bottom, bar_width, bar_height],
+        transform=ax.transAxes,
+    )
+    gradient = np.linspace(0, 1, 256).reshape(1, -1)
+    ax_bar.imshow(gradient, aspect="auto",
+                  cmap=plt.get_cmap(cmap_name), origin="lower")
+    ax_bar.set_yticks([])
+    ax_bar.set_xticks([0, 127.5, 255])
+    ax_bar.set_xticklabels(
+        [f"{vmin:.3g}", f"{vmean:.3g}", f"{vmax:.3g}"],
+        fontsize=FNUM,
+    )
+    ax_bar.tick_params(axis="x", direction="out", length=2.5, pad=1.5)
+    for spine in ax_bar.spines.values():
+        spine.set_linewidth(0.5)
+
+    return y - h
+
+# ── Block 1: Prediction correctness ──────────────────────────────────────
+y = _section_header(ax, y, "Prediction correctness")
+y = _swatch_entry(ax, y, "#1a9850", "Correct")
+y = _swatch_entry(ax, y, "#fee08b", "No prediction")
+y = _swatch_entry(ax, y, "#d73027", "Incorrect")
+y -= H_GAP
+
+# ── Block 2: Tool type ────────────────────────────────────────────────────
+y = _section_header(ax, y, "Tool type")
+y = _swatch_entry(ax, y, COLOR_DL, "Deep Learning (DL)")
+y = _swatch_entry(ax, y, COLOR_ML, "Machine Learning (ML)")
+y -= H_GAP
+
+# ── Block 3: Ground truth ─────────────────────────────────────────────────
+y = _section_header(ax, y, "Ground truth")
+y = _swatch_entry(ax, y, COLOR_AMP,    "AMP")
+y = _swatch_entry(ax, y, COLOR_NONAMP, "non-AMP")
+y -= H_GAP
+
+# ── Block 4: Physicochemical properties (gradient bars) ───────────────────
+y = _section_header(ax, y, "Physicochemical properties")
+for k, prop in enumerate(available_props):
+    vmin, vmean, vmax = prop_stats[prop]
+    y = _gradient_entry(ax, y, prop, vmin, vmean, vmax,
+                        PROP_CMAPS[k % len(PROP_CMAPS)])
+
+# ── Save ──────────────────────────────────────────────────────────────────
 plt.savefig(OUTPUT_ANALYSIS_2_PATH, dpi=150, bbox_inches="tight")
 plt.close()
 print(f"Analysis 2 saved to {OUTPUT_ANALYSIS_2_PATH}")
 
-# ─── Analysis 3: Correlation between peptide difficulty and properties ────────
-# Difficulty = proportion of tools that predicted incorrectly (error rate)
-# Only considers tools that have a prediction for each peptide
+# ===========================================================================
+# Analysis 3a: Spearman correlation
+# ===========================================================================
 
 correctness_df_valid = correctness_df.copy()
-
-# Error rate per peptide: mean of wrong predictions (0) among available tools
-# NaN predictions are excluded from the mean
 error_rate = correctness_df_valid.apply(
     lambda row: 1 - row.dropna().mean() if row.dropna().size > 0 else np.nan,
-    axis=1
+    axis=1,
 )
 eval_df = eval_df.copy()
 eval_df["error_rate"] = error_rate
 
-# Available physicochemical properties
-available_props = [p for p in PHYSICOCHEMICAL_PROPS if p in eval_df.columns]
+available_props_global = [p for p in PHYSICOCHEMICAL_PROPS if p in eval_df.columns]
 
-# Compute Spearman correlations
 corr_results = []
-for prop in available_props:
+for prop in available_props_global:
     prop_vals = pd.to_numeric(eval_df[prop], errors="coerce")
     mask      = eval_df["error_rate"].notna() & prop_vals.notna()
     if mask.sum() < 10:
         continue
     rho, pval = stats.spearmanr(eval_df.loc[mask, "error_rate"], prop_vals[mask])
     corr_results.append({
-        "Property":       prop,
-        "Spearman rho":   rho,
-        "p-value":        pval,
-        "Significant":    pval < 0.05,
+        "Property":     prop,
+        "Spearman rho": rho,
+        "p-value":      pval,
+        "Significant":  pval < 0.05,
     })
 
 corr_df = pd.DataFrame(corr_results).sort_values("Spearman rho")
 
-def format_pval(p):
-    """Format p-value: scientific notation if very small, otherwise 3 decimal places."""
-    if p == 0.0:
-        return "p<1e-300"
-    elif p < 0.001:
-        exp = int(np.floor(np.log10(p)))
-        return f"p=10^{exp}"
-    else:
-        return f"p={p:.3f}"
-
-fig, ax = plt.subplots(figsize=(12, 6))
-colors_bar = ["#d73027" if sig else "#92c5de"
-              for sig in corr_df["Significant"]]
-bars = ax.barh(corr_df["Property"], corr_df["Spearman rho"], color=colors_bar)
+fig, ax = plt.subplots(figsize=(10, 6))
+colors_bar = ["#d73027" if sig else "#92c5de" for sig in corr_df["Significant"]]
+ax.barh(corr_df["Property"], corr_df["Spearman rho"], color=colors_bar)
 ax.axvline(0, color="black", lw=0.8)
-ax.set_xlabel("Spearman ρ", fontsize=12)
-ax.set_title("Correlation between peptide error rate and physicochemical properties\n"
-             "(red = p < 0.05)", fontsize=13)
-
-# Extend x-axis to leave room for labels
-xmin, xmax = ax.get_xlim()
-ax.set_xlim(xmin - 0.12, xmax + 0.12)
-
-# Add p-value annotations outside the bars
-for bar, (_, row) in zip(bars, corr_df.iterrows()):
-    x      = bar.get_width()
-    label  = format_pval(row["p-value"])
-    # Place label beyond the bar end with a small gap, on the outer side
-    if x >= 0:
-        xpos = xmax + 0.01
-        ha   = "left"
-    else:
-        xpos = xmin - 0.01
-        ha   = "right"
-    ax.text(xpos, bar.get_y() + bar.get_height() / 2,
-            label, va="center", ha=ha, fontsize=8)
-
-plt.tight_layout()
-plt.savefig(OUTPUT_ANALYSIS_3_PATH, dpi=150, bbox_inches="tight")
-plt.close()
-print(f"Analysis 3 saved to {OUTPUT_ANALYSIS_3_PATH}")
-
-# Save correlation table
-corr_df.to_csv(
-    OUTPUT_ANALYSIS_3_PATH.replace(".png", ".csv"),
-    index=False
+ax.set_xlabel("Spearman \u03c1", fontsize=12)
+ax.set_title(
+    "Correlation between peptide error rate and physicochemical properties\n"
+    "(red = p < 0.05)",
+    fontsize=13,
 )
-print(f"Analysis 3 correlation table saved.")
+plt.tight_layout()
+plt.savefig(OUTPUT_ANALYSIS_3A_PATH, dpi=150, bbox_inches="tight")
+plt.close()
+print(f"Analysis 3a saved to {OUTPUT_ANALYSIS_3A_PATH}")
+
+corr_df.to_csv(str(OUTPUT_ANALYSIS_3A_PATH).replace(".png", ".csv"), index=False)
+print("Analysis 3a correlation table saved.")
+
+# ===========================================================================
+# Analysis 3b: Logistic regression for top-6 models
+# ===========================================================================
+
+top6_tools         = metrics_sorted.head(6)["Model"].tolist()
+available_props_lr = [p for p in PHYSICOCHEMICAL_PROPS if p in eval_df.columns]
+
+fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+axes_flat = axes.flatten()
+
+all_coef_rows = []
+
+for ax_idx, tool_name in enumerate(top6_tools):
+    ax        = axes_flat[ax_idx]
+    label_col = TOOLS[tool_name][0]
+
+    if label_col not in eval_df.columns:
+        ax.set_title(f"{tool_name}\n(no data)", fontsize=11)
+        ax.axis("off")
+        continue
+
+    cols_needed = [label_col] + available_props_lr
+    sub = eval_df[cols_needed].copy()
+    sub[label_col] = pd.to_numeric(sub[label_col], errors="coerce")
+    for p in available_props_lr:
+        sub[p] = pd.to_numeric(sub[p], errors="coerce")
+    sub = sub.dropna()
+
+    if sub[label_col].nunique() < 2 or len(sub) < 20:
+        ax.set_title(f"{tool_name}\n(insufficient data)", fontsize=11)
+        ax.axis("off")
+        continue
+
+    X      = sub[available_props_lr].values
+    y      = sub[label_col].astype(int).values
+
+    scaler = StandardScaler()
+    X_std  = scaler.fit_transform(X)
+
+    X_sm  = sm.add_constant(X_std, has_constant="add")
+    model = sm.Logit(y, X_sm)
+    try:
+        result = model.fit(method="bfgs", maxiter=200, disp=False)
+    except Exception:
+        result = model.fit(method="newton", maxiter=200, disp=False)
+
+    coef_df = pd.DataFrame({
+        "Model":       tool_name,
+        "Property":    available_props_lr,
+        "Coefficient": result.params[1:],
+        "Std_Error":   result.bse[1:],
+        "z_stat":      result.tvalues[1:],
+        "p_value":     result.pvalues[1:],
+    }).sort_values("Coefficient")
+
+    all_coef_rows.append(coef_df)
+
+    bar_colors_lr = []
+    for c, p in zip(coef_df["Coefficient"], coef_df["p_value"]):
+        if p < 0.05:
+            bar_colors_lr.append("#d73027" if c > 0 else "#4393c3")
+        else:
+            bar_colors_lr.append("#f4a582" if c > 0 else "#92c5de")
+
+    ax.barh(coef_df["Property"], coef_df["Coefficient"], color=bar_colors_lr)
+    ax.axvline(0, color="black", lw=0.8)
+
+    is_dl       = tool_name in DL_TOOLS
+    label_type  = "DL" if is_dl else "ML"
+    title_color = COLOR_DL if is_dl else COLOR_ML
+    ax.set_title(f"{tool_name}  [{label_type}]", fontsize=11,
+                 color=title_color, fontweight="bold")
+    ax.set_xlabel("Standardised coefficient", fontsize=9)
+    ax.tick_params(axis="y", labelsize=8)
+    ax.tick_params(axis="x", labelsize=8)
+
+    bacc_val = metrics_df.loc[metrics_df["Model"] == tool_name, "Balanced Accuracy"].values[0]
+    ax.text(
+        0.98, 0.02, f"Bal. Acc. = {bacc_val:.1f}%",
+        transform=ax.transAxes, ha="right", va="bottom", fontsize=8, color="gray",
+    )
+
+for k in range(len(top6_tools), 6):
+    axes_flat[k].axis("off")
+
+sig_handles = [
+    mpatches.Patch(color="#d73027", label="p < 0.05, positive"),
+    mpatches.Patch(color="#4393c3", label="p < 0.05, negative"),
+    mpatches.Patch(color="#f4a582", label="p \u2265 0.05, positive"),
+    mpatches.Patch(color="#92c5de", label="p \u2265 0.05, negative"),
+]
+fig.legend(handles=sig_handles, loc="lower center", ncol=4, fontsize=9,
+           title="Coefficient direction & significance",
+           title_fontsize=9, frameon=True, bbox_to_anchor=(0.5, -0.04))
+
+fig.suptitle(
+    "Logistic regression: physicochemical predictors of each top-6 model's predicted label\n"
+    "(standardised Wald coefficients)",
+    fontsize=13,
+    y=1.01,
+)
+plt.tight_layout()
+plt.savefig(OUTPUT_ANALYSIS_3B_PATH, dpi=150, bbox_inches="tight")
+plt.close()
+print(f"Analysis 3b saved to {OUTPUT_ANALYSIS_3B_PATH}")
+
+if all_coef_rows:
+    pd.concat(all_coef_rows, ignore_index=True).to_csv(OUTPUT_ANALYSIS_3B_CSV, index=False)
+    print(f"Analysis 3b CSV saved to {OUTPUT_ANALYSIS_3B_CSV}")

@@ -6,9 +6,9 @@ predictions) and the evaluation dataset folder from AMP databases, UniProt
 sequences and AMP prediction tool training sets.
 
 Expected project layout (paths relative to project root):
-    data/raw/ABP_bases/          -- FASTA files from AMP databases
-    data/raw/nonAMP_UniProt/     -- UniProt FASTA files (reviewed + unreviewed)
-    data/raw/tools/              -- Training sets of AMP prediction tools
+    data/raw/abps/               -- FASTA files from AMP databases
+    data/raw/non_amps/           -- UniProt FASTA files (reviewed + unreviewed)
+    data/raw/tools/              -- Training (and test) sets of AMP prediction tools
     data/interim/                -- Intermediate output directory
     data/processed/              -- Output directory
     scripts/                     -- This script lives here
@@ -31,8 +31,8 @@ from Bio import SeqIO
 ROOT = Path(__file__).resolve().parent.parent
 
 RAW           = ROOT / "data" / "raw"
-ABP_BASES     = RAW / "ABP_bases"
-NON_AMP_DIR   = RAW / "nonAMP_UniProt"
+ABP_DIR     = RAW / "abps"
+NON_AMP_DIR   = RAW / "non_amps"
 TOOLS_DIR     = RAW / "tools"
 
 INTERIM       = ROOT / "data" / "interim"
@@ -122,30 +122,30 @@ def strip_upper_unique_by_sequence(dataframe):
 print("=== Loading AMP databases ===")
 
 # -- AMPDB --
-ampdb_anti_gram_n = fasta_to_df(ABP_BASES / "Anti-gram-negative_AMPDB.fasta")
-ampdb_anti_gram_p = fasta_to_df(ABP_BASES / "Anti-gram-positive_AMPDB.fasta")
+ampdb_anti_gram_n = fasta_to_df(ABP_DIR / "ampdb_agn.fasta")
+ampdb_anti_gram_p = fasta_to_df(ABP_DIR / "ampdb_agp.fasta")
 df_ampdb = strip_upper_unique_by_sequence(
     pd.concat([ampdb_anti_gram_n, ampdb_anti_gram_p], ignore_index=True)
 )
 
 # -- APD --
-df_apd = fasta_to_df(ABP_BASES / "apd3_antibacterial.fasta")
+df_apd = fasta_to_df(ABP_DIR / "apd.fasta")
 df_apd = df_apd[df_apd["Sequence"].str.strip() != ""]
 df_apd = strip_upper_unique_by_sequence(df_apd).drop(columns=["Name"])  # Name is empty
 
 # -- dbAMP --
 df_dbamp = strip_upper_unique_by_sequence(
-    fasta_to_df(ABP_BASES / "dbAMP_Antibacterial_2024.fasta")
+    fasta_to_df(ABP_DIR / "dbamp.fasta")
 ).drop(columns=["Name"])  # Name is empty
 
 # -- DRAMP --
 df_dramp = strip_upper_unique_by_sequence(
-    fasta_to_df(ABP_BASES / "dramp_antibacterial.fasta")
+    fasta_to_df(ABP_DIR / "dramp.fasta")
 ).drop(columns=["Name"])  # Name is empty
 
 # -- DBAASP --
 df_dbaasp = strip_upper_unique_by_sequence(
-    fasta_to_df(ABP_BASES / "peptides-DBAASP.txt")
+    fasta_to_df(ABP_DIR / "dbaasp.fasta")
 )
 
 # -- Merge all ABP databases via outer join on Sequence --
@@ -182,7 +182,7 @@ print(f"  ABPs from databases: {len(df_abps)}")
 print("=== Loading UniProt reviewed sequences ===")
 
 df_uniprot = fasta_to_df_2(
-    NON_AMP_DIR / "uniprotkb_length_5_TO_255_NOT_keyword_K_2025_09_15.fasta"
+    NON_AMP_DIR / "uniprot_reviewed.fasta"
 )
 df_uniprot = df_uniprot.rename(columns={"ID": "Swiss-Prot_ID", "Name": "Swiss-Prot_name"})
 df_uniprot = strip_upper_unique_by_sequence(df_uniprot)
@@ -208,10 +208,10 @@ amp_scanner_segs = {
     "nonAMP": ["DECOY.tr.fa",  "DECOY.eval.fa"],
 }
 df_AMP_Scanner_AMP    = pd.concat(
-    [fasta_to_df(TOOLS_DIR / "AMP_Scanner" / f).drop(["Name"], axis=1)
+    [fasta_to_df(TOOLS_DIR / "amp_scanner" / f).drop(["Name"], axis=1)
      for f in amp_scanner_segs["AMP"]], ignore_index=True)
 df_AMP_Scanner_nonAMP = pd.concat(
-    [fasta_to_df(TOOLS_DIR / "AMP_Scanner" / f).drop(["Name"], axis=1)
+    [fasta_to_df(TOOLS_DIR / "amp_scanner" / f).drop(["Name"], axis=1)
      for f in amp_scanner_segs["nonAMP"]], ignore_index=True)
 df_AMP_Scanner_AMP["AMP_Scanner_ground_truth"]    = 1
 df_AMP_Scanner_nonAMP["AMP_Scanner_ground_truth"] = 0
@@ -221,8 +221,8 @@ df_AMP_Scanner = strip_upper_unique_by_sequence(
 )
 
 # -- Macrel (trained on AmPEP dataset; sequences lack identifiers) --
-df_Macrel_AMP    = fasta_to_df(TOOLS_DIR / "Macrel" / "M_model_train_AMP_sequence.fasta").drop(["ID", "Name"], axis=1)
-df_Macrel_nonAMP = fasta_to_df(TOOLS_DIR / "Macrel" / "M_model_train_nonAMP_sequence.fasta").drop(["ID", "Name"], axis=1)
+df_Macrel_AMP    = fasta_to_df(TOOLS_DIR / "macrel" / "M_model_train_AMP_sequence.fasta").drop(["ID", "Name"], axis=1)
+df_Macrel_nonAMP = fasta_to_df(TOOLS_DIR / "macrel" / "M_model_train_nonAMP_sequence.fasta").drop(["ID", "Name"], axis=1)
 df_Macrel_AMP["Macrel_ground_truth"]    = 1
 df_Macrel_nonAMP["Macrel_ground_truth"] = 0
 df_Macrel = strip_upper_unique_by_sequence(
@@ -231,12 +231,12 @@ df_Macrel = strip_upper_unique_by_sequence(
 
 # -- amPEPpy --
 df_amPEPpy_AMP    = strip_upper_unique_by_sequence(
-    fasta_to_df(TOOLS_DIR / "amPEPpy" / "M_model_train_AMP_sequence.numbered.fasta")
+    fasta_to_df(TOOLS_DIR / "ampeppy" / "M_model_train_AMP_sequence.numbered.fasta")
     .drop(["Name"], axis=1)
     .rename(columns={"ID": "amPEPpy_AMP_ID"})
 )
 df_amPEPpy_nonAMP = strip_upper_unique_by_sequence(
-    fasta_to_df(TOOLS_DIR / "amPEPpy" / "M_model_train_nonAMP_sequence.numbered.proplen.subsample.fasta")
+    fasta_to_df(TOOLS_DIR / "ampeppy" / "M_model_train_nonAMP_sequence.numbered.proplen.subsample.fasta")
     .drop(["Name"], axis=1)
     .rename(columns={"ID": "amPEPpy_nonAMP_ID"})
 )
@@ -258,14 +258,14 @@ df_amPEPpy["amPEPpy_ground_truth"] = np.select(
 
 # -- LMPred --
 df_LMPred = pd.concat(
-    [pd.read_csv(TOOLS_DIR / "LMPred" / "X_train.csv"),
-     pd.read_csv(TOOLS_DIR / "LMPred" / "X_val.csv")],
+    [pd.read_csv(TOOLS_DIR / "lmpred" / "X_train.csv"),
+     pd.read_csv(TOOLS_DIR / "lmpred" / "X_val.csv")],
     ignore_index=True,
 )
 df_LMPred.columns = ["Sequence_length", "Sequence", "LMPred_ID"]
 LMPred_labels = pd.concat(
-    [pd.read_csv(TOOLS_DIR / "LMPred" / "y_train.csv", header=None),
-     pd.read_csv(TOOLS_DIR / "LMPred" / "y_val.csv",   header=None)],
+    [pd.read_csv(TOOLS_DIR / "lmpred" / "y_train.csv", header=None),
+     pd.read_csv(TOOLS_DIR / "lmpred" / "y_val.csv",   header=None)],
     ignore_index=True,
 )
 df_LMPred["LMPred_ground_truth"] = LMPred_labels[0].astype(int)
@@ -274,8 +274,8 @@ df_LMPred = strip_upper_unique_by_sequence(
 )
 
 # -- AMPlify --
-amplify_amp    = fasta_to_df(TOOLS_DIR / "AMPlify" / "AMPlify_AMP_train_common.fa").drop(["Name"], axis=1)
-amplify_nonamp = fasta_to_df(TOOLS_DIR / "AMPlify" / "AMPlify_non_AMP_train_balanced.fa").drop(["Name"], axis=1)
+amplify_amp    = fasta_to_df(TOOLS_DIR / "amplify" / "AMPlify_AMP_train_common.fa").drop(["Name"], axis=1)
+amplify_nonamp = fasta_to_df(TOOLS_DIR / "amplify" / "AMPlify_non_AMP_train_balanced.fa").drop(["Name"], axis=1)
 amplify_amp["AMPlify_ground_truth"]    = 1
 amplify_nonamp["AMPlify_ground_truth"] = 0
 df_AMPlify = strip_upper_unique_by_sequence(
@@ -292,8 +292,8 @@ df_AMP_BERT = strip_upper_unique_by_sequence(
 )
 
 # -- AMPFinder --
-ampfinder_amp    = fasta_to_df(TOOLS_DIR / "AMPFinder" / "D1" / "3594-Samp.fasta").drop(["Name"], axis=1)
-ampfinder_nonamp = fasta_to_df(TOOLS_DIR / "AMPFinder" / "D1" / "3925-Snonamp.fasta").drop(["Name"], axis=1)
+ampfinder_amp    = fasta_to_df(TOOLS_DIR / "ampfinder" / "D1" / "3594-Samp.fasta").drop(["Name"], axis=1)
+ampfinder_nonamp = fasta_to_df(TOOLS_DIR / "ampfinder" / "D1" / "3925-Snonamp.fasta").drop(["Name"], axis=1)
 ampfinder_amp["AMPFinder_ground_truth"]    = 1
 ampfinder_nonamp["AMPFinder_ground_truth"] = 0
 df_AMPFinder = strip_upper_unique_by_sequence(
@@ -302,10 +302,10 @@ df_AMPFinder = strip_upper_unique_by_sequence(
 )
 
 # -- AGRAMP --
-agramp_amp   = fasta_to_df(TOOLS_DIR / "AGRAMP" / "AMP_train.txt").drop(["Name"], axis=1)
-agramp_namp1 = fasta_to_df(TOOLS_DIR / "AGRAMP" / "NOAMP1_train.txt").drop(["Name"], axis=1)
-agramp_namp2 = fasta_to_df(TOOLS_DIR / "AGRAMP" / "NOAMP2_train.txt").drop(["Name"], axis=1)
-agramp_namp3 = fasta_to_df(TOOLS_DIR / "AGRAMP" / "NOAMP3_train.txt").drop(["Name"], axis=1)
+agramp_amp   = fasta_to_df(TOOLS_DIR / "agramp" / "AMP_train.txt").drop(["Name"], axis=1)
+agramp_namp1 = fasta_to_df(TOOLS_DIR / "agramp" / "NOAMP1_train.txt").drop(["Name"], axis=1)
+agramp_namp2 = fasta_to_df(TOOLS_DIR / "agramp" / "NOAMP2_train.txt").drop(["Name"], axis=1)
+agramp_namp3 = fasta_to_df(TOOLS_DIR / "agramp" / "NOAMP3_train.txt").drop(["Name"], axis=1)
 agramp_amp["AGRAMP_ground_truth"] = 1
 df_AGRAMP_nonAMP = pd.concat([agramp_namp1, agramp_namp2, agramp_namp3], ignore_index=True)
 df_AGRAMP_nonAMP["AGRAMP_ground_truth"] = 0
@@ -315,8 +315,8 @@ df_AGRAMP = strip_upper_unique_by_sequence(
 )
 
 # -- PepNet --
-pepnet_train = fasta_to_df_pepnet(TOOLS_DIR / "PepNet" / "AMP" / "data_split_train.txt")
-pepnet_val   = fasta_to_df_pepnet(TOOLS_DIR / "PepNet" / "AMP" / "data_split_valid.txt")
+pepnet_train = fasta_to_df_pepnet(TOOLS_DIR / "pepnet" / "AMP" / "data_split_train.txt")
+pepnet_val   = fasta_to_df_pepnet(TOOLS_DIR / "pepnet" / "AMP" / "data_split_valid.txt")
 df_PepNet = strip_upper_unique_by_sequence(
     pd.concat([pepnet_train, pepnet_val], ignore_index=True)
     .rename(columns={"ID": "PepNet_ID", "Label": "PepNet_ground_truth"})
@@ -324,26 +324,26 @@ df_PepNet = strip_upper_unique_by_sequence(
 
 # -- KT-AMPpred (AMP classifier only; no ID column) --
 df_KT_AMPpred = strip_upper_unique_by_sequence(
-    pd.read_csv(TOOLS_DIR / "KT-AMPpred" / "amp_train.tsv", sep="\t")
+    pd.read_csv(TOOLS_DIR / "kt_amppred" / "amp_train.tsv", sep="\t")
     .drop(["index"], axis=1)
     .rename(columns={"label": "KT-AMPpred_ground_truth", "text": "Sequence"})
 )
 
 # -- PLAPD --
 df_PLAPD = strip_upper_unique_by_sequence(
-    pd.read_csv(TOOLS_DIR / "PLAPD" / "training_data.csv")
+    pd.read_csv(TOOLS_DIR / "plapd" / "training_data.csv")
     .rename(columns={"Seq": "Sequence", "Label": "PLAPD_ground_truth"})
 )
 
 # -- DLFea4AMPGen (ABP-MPB model) --
 df_DLFea4AMPGen = strip_upper_unique_by_sequence(
-    pd.read_csv(TOOLS_DIR / "DLFea4AMPGen" / "ABP" / "train.csv")
+    pd.read_csv(TOOLS_DIR / "dlfea4ampgen" / "ABP" / "train.csv")
     .rename(columns={"id": "DLFea4AMPGen_ID", "seq": "Sequence", "label": "DLFea4AMPGen_ground_truth"})
 )
 
 # -- MultiAMP --
 # Each sample is a single-sequence .fas file; the label is the last token of the header.
-multi_amp_path = TOOLS_DIR / "MultiAMP"
+multi_amp_path = TOOLS_DIR / "multiamp"
 seqs_dict = {"train_amp": set(), "train_nonamp": set()}
 for folder in multi_amp_path.iterdir():
     if not folder.is_dir() or folder.name not in seqs_dict:
@@ -429,7 +429,7 @@ n_extra = len(abps_for_evaluation) - len(non_amps_for_evaluation)
 if n_extra > 0:
     print(f"  Adding {n_extra} TrEMBL sequences to balance the evaluation dataset …")
     df_uniprot_unreviewed = fasta_to_df_2(
-        NON_AMP_DIR / "uniprotkb_length_5_TO_255_NOT_keyword_K_2025_11_07_unreviewed.fasta"
+        NON_AMP_DIR / "uniprot_unreviewed.fasta"
     )
     df_uniprot_unreviewed = df_uniprot_unreviewed.rename(
         columns={"ID": "TrEMBL_ID", "Name": "TrEMBL_name"}
