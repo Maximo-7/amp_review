@@ -291,8 +291,8 @@ df_AMP_BERT = strip_upper_unique_by_sequence(
 )
 
 # -- AMPFinder --
-ampfinder_amp    = fasta_to_df(TOOLS_DIR / "ampfinder" / "D1" / "3594-Samp.fasta").drop(["Name"], axis=1)
-ampfinder_nonamp = fasta_to_df(TOOLS_DIR / "ampfinder" / "D1" / "3925-Snonamp.fasta").drop(["Name"], axis=1)
+ampfinder_amp    = fasta_to_df(TOOLS_DIR / "ampfinder" / "3594-Samp.fasta").drop(["Name"], axis=1)
+ampfinder_nonamp = fasta_to_df(TOOLS_DIR / "ampfinder" / "3925-Snonamp.fasta").drop(["Name"], axis=1)
 ampfinder_amp["AMPFinder_ground_truth"]    = 1
 ampfinder_nonamp["AMPFinder_ground_truth"] = 0
 df_AMPFinder = strip_upper_unique_by_sequence(
@@ -301,10 +301,10 @@ df_AMPFinder = strip_upper_unique_by_sequence(
 )
 
 # -- AGRAMP --
-agramp_amp   = fasta_to_df(TOOLS_DIR / "agramp" / "AMP_train.txt").drop(["Name"], axis=1)
-agramp_namp1 = fasta_to_df(TOOLS_DIR / "agramp" / "NOAMP1_train.txt").drop(["Name"], axis=1)
-agramp_namp2 = fasta_to_df(TOOLS_DIR / "agramp" / "NOAMP2_train.txt").drop(["Name"], axis=1)
-agramp_namp3 = fasta_to_df(TOOLS_DIR / "agramp" / "NOAMP3_train.txt").drop(["Name"], axis=1)
+agramp_amp   = fasta_to_df(TOOLS_DIR / "agramp" / "AMP_train.fasta").drop(["Name"], axis=1)
+agramp_namp1 = fasta_to_df(TOOLS_DIR / "agramp" / "NOAMP1_train.fasta").drop(["Name"], axis=1)
+agramp_namp2 = fasta_to_df(TOOLS_DIR / "agramp" / "NOAMP2_train.fasta").drop(["Name"], axis=1)
+agramp_namp3 = fasta_to_df(TOOLS_DIR / "agramp" / "NOAMP3_train.fasta").drop(["Name"], axis=1)
 agramp_amp["AGRAMP_ground_truth"] = 1
 df_AGRAMP_nonAMP = pd.concat([agramp_namp1, agramp_namp2, agramp_namp3], ignore_index=True)
 df_AGRAMP_nonAMP["AGRAMP_ground_truth"] = 0
