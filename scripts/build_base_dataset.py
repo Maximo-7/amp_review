@@ -220,14 +220,13 @@ df_AMP_Scanner = strip_upper_unique_by_sequence(
     .rename(columns={"ID": "AMP_Scanner_ID"})
 )
 
-# -- Macrel (trained on AmPEP dataset; sequences lack identifiers) --
-df_Macrel_AMP    = fasta_to_df(TOOLS_DIR / "macrel" / "M_model_train_AMP_sequence.fasta").drop(["ID", "Name"], axis=1)
-df_Macrel_nonAMP = fasta_to_df(TOOLS_DIR / "macrel" / "M_model_train_nonAMP_sequence.fasta").drop(["ID", "Name"], axis=1)
-df_Macrel_AMP["Macrel_ground_truth"]    = 1
-df_Macrel_nonAMP["Macrel_ground_truth"] = 0
-df_Macrel = strip_upper_unique_by_sequence(
-    pd.concat([df_Macrel_AMP, df_Macrel_nonAMP], ignore_index=True)
-)
+# -- Macrel (trained on AmPEP dataset) --
+df_Macrel = pd.read_csv(TOOLS_DIR / "macrel" / "preproc" / "AMP.train.tsv", sep="\t", index_col=0)
+df_Macrel = df_Macrel[["sequence", "group"]].rename(columns={"sequence": "Sequence", "group": "Macrel_ground_truth"})
+df_Macrel.index.name = "Macrel_ID"
+df_Macrel = df_Macrel.reset_index()
+df_Macrel["Macrel_ground_truth"] = df_Macrel["Macrel_ground_truth"].map({"AMP": 1, "NAMP": 0})
+df_Macrel = strip_upper_unique_by_sequence(df_Macrel)
 
 # -- amPEPpy --
 df_amPEPpy_AMP    = strip_upper_unique_by_sequence(
@@ -423,19 +422,20 @@ print(f"  ABPs for evaluation:      {len(abps_for_evaluation)}")
 print(f"  Non-AMPs for evaluation:  {len(non_amps_for_evaluation)}")
 
 # ---------------------------------------------------------------------------
-# Balance: add new unreviewed UniProt (TrEMBL) sequences to match ABP count.
+# Balance: subsample the larger class to match the smaller one.
 # ---------------------------------------------------------------------------
-n_extra = len(abps_for_evaluation) - len(non_amps_for_evaluation)
-if n_extra > 0:
-    print(f"  Adding {n_extra} TrEMBL sequences to balance the evaluation dataset …")
+n_abp    = len(abps_for_evaluation)
+n_nonamp = len(non_amps_for_evaluation)
+
+if n_abp > n_nonamp:
+    print(f"  Adding {n_abp - n_nonamp} TrEMBL sequences to balance the evaluation dataset …")
     df_uniprot_unreviewed = fasta_to_df_2(
-        NON_AMP_DIR / "uniprot_unreviewed.fasta"
+        NON_AMP_DIR / "uniprotkb_length_5_TO_255_NOT_keyword_K_2025_11_07_unreviewed.fasta"
     )
     df_uniprot_unreviewed = df_uniprot_unreviewed.rename(
         columns={"ID": "TrEMBL_ID", "Name": "TrEMBL_name"}
     )
     df_uniprot_unreviewed = strip_upper_unique_by_sequence(df_uniprot_unreviewed)
-
     # Keep only sequences not already in the complete dataset
     df_uniprot_unreviewed = df_uniprot_unreviewed[
         ~df_uniprot_unreviewed["Sequence"].isin(complete_dataset["Sequence"])
@@ -445,9 +445,13 @@ if n_extra > 0:
         df_uniprot_unreviewed["Sequence"].str.len().between(5, 255)
         & df_uniprot_unreviewed["Sequence"].apply(lambda s: set(s).issubset(aa20))
     ]
-
-    df_uniprot_unreviewed_selected = df_uniprot_unreviewed.sample(n=n_extra, random_state=356)
+    df_uniprot_unreviewed_selected = df_uniprot_unreviewed.sample(n=n_abp - n_nonamp, random_state=356)
     complete_dataset = pd.concat([complete_dataset, df_uniprot_unreviewed_selected], ignore_index=True)
+
+elif n_nonamp > n_abp:
+    print(f"  Subsampling {n_nonamp - n_abp} non-AMP sequences to balance the evaluation dataset …")
+    excess = non_amps_for_evaluation.sample(n=n_nonamp - n_abp, random_state=356)
+    complete_dataset = complete_dataset[~complete_dataset["Sequence"].isin(excess["Sequence"])].reset_index(drop=True)
 
 # ---------------------------------------------------------------------------
 # Derived columns

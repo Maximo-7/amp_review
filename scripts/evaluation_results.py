@@ -23,7 +23,12 @@ Run from the project root:
     python scripts/evaluation_results.py
 """
 
+import sys
 import warnings
+
+# scipy's dendrogram uses Python recursion for tree traversal; the default
+# limit of 1000 is too shallow for datasets with hundreds of peptides.
+sys.setrecursionlimit(100_000)
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -70,8 +75,10 @@ OUTPUT_ANALYSIS_2_PATH     = ROOT / "results" / "evaluation" / "analysis_2_corre
 OUTPUT_ANALYSIS_3A_PATH    = ROOT / "results" / "evaluation" / "analysis_3a_property_correlations.png"
 OUTPUT_ANALYSIS_3B_PATH    = ROOT / "results" / "evaluation" / "analysis_3b_logreg_top6.png"
 OUTPUT_ANALYSIS_3B_CSV     = ROOT / "results" / "evaluation" / "analysis_3b_logreg_top6.csv"
+OUTPUT_FIGURE_DIR          = ROOT / "results" / "evaluation" / "figure"
 
 (ROOT / "results" / "evaluation").mkdir(parents=True, exist_ok=True)
+OUTPUT_FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # Tool definitions
@@ -108,6 +115,9 @@ UNKNOWN_TRAINING_TOOLS = {
     "Ma et al. (2022)", "CAMPR4 ANN", "CAMPR4 RF", "CAMPR4 SVM", "PyAMPA",
 }
 
+# Tools that only predict a subset of peptides due to sequence length restrictions
+LENGTH_RESTRICTED_TOOLS = {"AMPlify", "AMP Scanner"}
+
 MA_ET_AL_PROB_COLS = [
     "Ma_et_al_att_pred_prob",
     "Ma_et_al_bert_pred_prob",
@@ -116,7 +126,6 @@ MA_ET_AL_PROB_COLS = [
 
 PHYSICOCHEMICAL_PROPS = [
     "Sequence_length",
-    "Molecular Weight",
     "Net Charge (pH 7)",
     "Aromaticity",
     "Instability Index",
@@ -124,11 +133,11 @@ PHYSICOCHEMICAL_PROPS = [
     "GRAVY",
     "Boman Index",
 ]
+# Molecular Weight excluded: heavily correlated with Sequence Length.
 
 # Human-readable display names (used in legend and axis labels)
 PROP_DISPLAY_NAMES = {
-    "Sequence_length":   "Sequence length",
-    "Molecular Weight":  "Molecular Weight",
+    "Sequence_length":   "Sequence Length",
     "Net Charge (pH 7)": "Net Charge (pH 7)",
     "Aromaticity":       "Aromaticity",
     "Instability Index": "Instability Index",
@@ -141,8 +150,8 @@ COLOR_DL = "#e07b39"   # warm orange  -> deep learning
 COLOR_ML = "#4a90d9"   # steel blue   -> machine learning
 
 # AMP/non-AMP: clearly distinct from both DL (orange) and ML (blue)
-COLOR_AMP    = "#8B0000"   # dark red
-COLOR_NONAMP = "#006400"   # dark green
+COLOR_AMP    = "#6a0dad"   # purple  (avoids clash with red/green heatmap)
+COLOR_NONAMP = "#b8860b"   # dark gold (avoids clash with red/green heatmap)
 
 PROP_CMAPS = ["viridis", "plasma", "coolwarm", "YlOrBr", "PuBu", "RdYlGn", "BrBG", "PuOr"]
 
@@ -214,7 +223,8 @@ print(metrics_df.to_string(index=False))
 fig, ax = plt.subplots(figsize=(10, 8))
 colors  = cm.tab20(np.linspace(0, 1, len(roc_data)))
 
-for (tool, (fpr, tpr, auroc)), color in zip(roc_data.items(), colors):
+roc_data_sorted = dict(sorted(roc_data.items(), key=lambda x: x[1][2], reverse=True))
+for (tool, (fpr, tpr, auroc)), color in zip(roc_data_sorted.items(), colors):
     ax.plot(fpr, tpr, lw=1.5, color=color, label=f"{tool} (AUROC = {auroc:.1f}%)")
 
 ax.plot([0, 1], [0, 1], "k--", lw=1, label="Random classifier")
@@ -298,6 +308,8 @@ legend_handles = [
                   label="Random classifier (50%)"),
     mlines.Line2D([], [], color="black", marker="$\u2605$", linestyle="none",
                   markersize=10, label="Training dataset not available"),
+    mlines.Line2D([], [], color="black", marker="$\u2716$", linestyle="none",
+                  markersize=7, label="Seq. length restrictions (subset only)"),
 ]
 ax.legend(handles=legend_handles, fontsize=9)
 plt.xticks(rotation=45, ha="right", fontsize=9)
@@ -310,6 +322,9 @@ for bar, (_, row) in zip(bars, metrics_sorted.iterrows()):
     if tool in UNKNOWN_TRAINING_TOOLS:
         ax.text(bar.get_x() + bar.get_width() / 2, val + 4.0,
                 "\u2605", ha="center", va="bottom", fontsize=12, color="black")
+    if tool in LENGTH_RESTRICTED_TOOLS:
+        ax.text(bar.get_x() + bar.get_width() / 2, val + 4.0,
+                "\u2716", ha="center", va="bottom", fontsize=12, color="black")
 
 plt.tight_layout()
 plt.savefig(OUTPUT_ANALYSIS_0_PATH, dpi=150)
@@ -342,10 +357,13 @@ for i, tool_i in enumerate(tool_order):
         agreement.loc[tool_i, tool_j] = pct
 
 agreement_sym = agreement.copy()
-np.fill_diagonal(agreement_sym.values, 100.0)
+
+arr = agreement_sym.to_numpy(copy=True)          # writeable copy
+np.fill_diagonal(arr, 100.0)
 for i in range(n_tools):
     for j in range(i + 1, n_tools):
-        agreement_sym.iloc[i, j] = agreement_sym.iloc[j, i]
+        arr[i, j] = arr[j, i]
+agreement_sym = pd.DataFrame(arr, index=tool_order, columns=tool_order)
 
 dist_matrix = 100.0 - agreement_sym.fillna(50).values
 np.fill_diagonal(dist_matrix, 0.0)
@@ -356,6 +374,13 @@ order_idx   = leaves_list(Z)
 agreement_clustered = agreement_sym.iloc[order_idx, :].iloc[:, order_idx]
 mask_upper = np.triu(np.ones_like(agreement_clustered, dtype=bool), k=1)
 
+# Use the minimum observed agreement value (floored to nearest 5 %) as vmin
+# so the colourbar reflects the actual data range rather than starting at 0.
+_a1_vals = agreement_clustered.values[~np.triu(np.ones_like(agreement_clustered, dtype=bool))]
+_a1_vals = _a1_vals[~np.isnan(_a1_vals)]
+_a1_vmin = int(np.floor(_a1_vals.min() / 5) * 5)
+_a1_ticks = list(range(_a1_vmin, 101, 25)) if (100 - _a1_vmin) % 25 == 0     else sorted(set([_a1_vmin] + list(range(0, 101, 25)) + [100]))
+
 fig, ax = plt.subplots(figsize=(15, 12))
 sns.heatmap(
     agreement_clustered.astype(float),
@@ -363,12 +388,12 @@ sns.heatmap(
     annot=True,
     fmt=".1f",
     cmap="YlOrRd",
-    vmin=50,
+    vmin=_a1_vmin,
     vmax=100,
     linewidths=0.5,
     ax=ax,
     annot_kws={"size": 10},
-    cbar_kws={"label": "Agreement (%)"},
+    cbar_kws={"label": "Agreement (%)", "ticks": _a1_ticks},
 )
 
 ax.set_title(
@@ -442,13 +467,17 @@ available_props = [p for p in PHYSICOCHEMICAL_PROPS if p in eval_plot.columns]
 side_annot_raw = pd.DataFrame(index=eval_plot.index)
 side_annot_raw["Ground truth"] = eval_plot["ABP_from_databases"].astype(float).values
 
+# Physicochemical side strips are normalised to [5th, 95th] percentile so
+# that outliers don't compress the colour range for the majority of peptides.
+# Values below p5 map to 0 (coldest colour) and above p95 map to 1 (hottest).
 prop_stats = {}
 for prop in available_props:
     vals = pd.to_numeric(eval_plot[prop], errors="coerce")
-    vmin, vmax = vals.min(), vals.max()
-    vmean = vals.mean()
-    prop_stats[prop] = (vmin, vmean, vmax)
-    side_annot_raw[prop] = (vals - vmin) / (vmax - vmin + 1e-12)
+    p5,  p95  = np.nanpercentile(vals, 5),  np.nanpercentile(vals, 95)
+    vmid = np.nanmedian(vals)
+    prop_stats[prop] = (p5, vmid, p95)   # stored as (lo, mid, hi) for legend
+    norm_vals = (vals - p5) / (p95 - p5 + 1e-12)
+    side_annot_raw[prop] = norm_vals.clip(0, 1)  # clip outliers to endpoints
 
 # ── GridSpec layout ───────────────────────────────────────────────────────
 n_side    = 1 + len(available_props)
@@ -602,6 +631,7 @@ ax.set_ylim(0, 1)
 
 # ── Estimate total height needed so we can set the y-step sizes ────────────
 # Swatch blocks: 3 entries for correctness, 2 for tool type, 2 for ground truth
+# Gradient bars show [p5, median, p95] range (outlier-robust normalisation)
 # Gradient block: len(available_props) bars
 # We'll use a simple uniform grid: divide [0,1] into logical rows.
 
@@ -651,8 +681,9 @@ def _swatch_entry(ax, y, color, label):
 
 def _gradient_entry(ax, y, prop, vmin, vmean, vmax, cmap_name):
     """
-    Draw one gradient bar with property name above and min/mean/max below.
+    Draw one gradient bar with property name above and p5/median/p95 below.
     The bar is a real Axes added as an inset, anchored to ax.transAxes.
+    Colour range corresponds to [p5, p95]; outliers are clipped to endpoints.
     Returns new y.
     """
     display_name = PROP_DISPLAY_NAMES.get(prop, prop)
@@ -880,3 +911,290 @@ print(f"Analysis 3b saved to {OUTPUT_ANALYSIS_3B_PATH}")
 if all_coef_rows:
     pd.concat(all_coef_rows, ignore_index=True).to_csv(OUTPUT_ANALYSIS_3B_CSV, index=False)
     print(f"Analysis 3b CSV saved to {OUTPUT_ANALYSIS_3B_CSV}")
+
+# ===========================================================================
+# Combined paper figure  (fully vectorial — all content re-drawn natively)
+# ===========================================================================
+# Layout (row-major order):
+#   Row 0 (top)    : [A] ROC curves        | [B] Analysis 0 (balanced accuracy)
+#   Row 1 (middle) : [C] Analysis 1        | [D] Analysis 3a (Spearman ρ)
+#   Row 2 (bottom) : [E] Analysis 2 heatmap (spans both columns)
+#
+# Analysis 2 is itself a complex nested GridSpec; it is rebuilt inside a
+# SubplotSpec cell using GridSpecFromSubplotSpec so that its internal axes
+# (dendrograms, heatmap, side strips, legend) are proper matplotlib Axes
+# rather than rasterised images.
+# ===========================================================================
+
+FIGURE_PDF_PATH = OUTPUT_FIGURE_DIR / "combined_figure.pdf"
+FIGURE_PNG_PATH = OUTPUT_FIGURE_DIR / "combined_figure.png"
+
+_PANEL_KW = dict(fontsize=26, fontweight="bold", va="top", ha="left")
+
+# ── Outer grid: 3 rows × 2 columns ─────────────────────────────────────────
+# Symmetric left/right margins are set via subplots_adjust
+fig_paper = plt.figure(figsize=(26, 34))
+fig_paper.subplots_adjust(left=0.07, right=0.97, top=0.97, bottom=0.05)
+
+gs_outer = gridspec.GridSpec(
+    3, 2,
+    figure=fig_paper,
+    height_ratios=[3, 3, 5],   # bottom row taller for heatmap
+    hspace=0.28,
+    wspace=0.28,
+)
+
+# ---------------------------------------------------------------------------
+# Panel A – ROC curves
+# ---------------------------------------------------------------------------
+ax_A = fig_paper.add_subplot(gs_outer[0, 0])
+
+roc_colors = cm.tab20(np.linspace(0, 1, len(roc_data)))
+roc_data_sorted = dict(sorted(roc_data.items(), key=lambda x: x[1][2], reverse=True))
+for (tool, (fpr, tpr, auroc)), color in zip(roc_data_sorted.items(), roc_colors):
+    ax_A.plot(fpr, tpr, lw=1.5, color=color, label=f"{tool} (AUROC = {auroc:.1f}%)")
+
+ax_A.plot([0, 1], [0, 1], "k--", lw=1, label="Random classifier")
+ax_A.set_xlabel("False Positive Rate", fontsize=13)
+ax_A.set_ylabel("True Positive Rate", fontsize=13)
+ax_A.set_title("ROC curves", fontsize=16, fontweight="bold")
+ax_A.legend(loc="lower right", fontsize=8)
+ax_A.tick_params(axis="both", labelsize=11)
+ax_A.set_xlim([0, 1])
+ax_A.set_ylim([0, 1.02])
+ax_A.text(-0.12, 1.04, "A", transform=ax_A.transAxes, **_PANEL_KW)
+
+# ---------------------------------------------------------------------------
+# Panel B – Analysis 0: balanced accuracy bar chart
+# ---------------------------------------------------------------------------
+ax_B = fig_paper.add_subplot(gs_outer[0, 1])
+
+bar_colors_B = [COLOR_DL if t in DL_TOOLS else COLOR_ML for t in metrics_sorted["Model"]]
+bars_B = ax_B.bar(
+    metrics_sorted["Model"],
+    metrics_sorted["Balanced Accuracy"],
+    color=bar_colors_B,
+)
+ax_B.set_xlabel("Tool", fontsize=13)
+ax_B.set_ylabel("Balanced Accuracy (%)", fontsize=13)
+ax_B.set_title("Balanced Accuracy by Tool (ordered highest to lowest)", fontsize=16, fontweight="bold")
+ax_B.set_ylim([0, 110])
+ax_B.axhline(50, color="gray", linestyle="--", lw=1)
+ax_B.tick_params(axis="y", labelsize=11)
+
+legend_handles_B = [
+    mpatches.Patch(color=COLOR_DL, label="Deep Learning (DL)"),
+    mpatches.Patch(color=COLOR_ML, label="Machine Learning (ML)"),
+    mlines.Line2D([], [], color="gray", linestyle="--", lw=1.5,
+                  label="Random classifier (50%)"),
+    mlines.Line2D([], [], color="black", marker="$\u2605$", linestyle="none",
+                  markersize=9, label="Training dataset not available"),
+    mlines.Line2D([], [], color="black", marker="$\u2716$", linestyle="none",
+                  markersize=7, label="Seq. length restrictions (subset only)"),
+]
+ax_B.legend(handles=legend_handles_B, fontsize=9)
+ax_B.set_xticks(range(len(metrics_sorted)))
+ax_B.set_xticklabels(metrics_sorted["Model"], rotation=45, ha="right", fontsize=9)
+
+for bar, (_, row) in zip(bars_B, metrics_sorted.iterrows()):
+    val  = row["Balanced Accuracy"]
+    tool = row["Model"]
+    ax_B.text(bar.get_x() + bar.get_width() / 2, val + 0.5,
+              f"{val:.1f}", ha="center", va="bottom", fontsize=6)
+    if tool in UNKNOWN_TRAINING_TOOLS:
+        ax_B.text(bar.get_x() + bar.get_width() / 2, val + 4.0,
+                  "\u2605", ha="center", va="bottom", fontsize=10, color="black")
+    if tool in LENGTH_RESTRICTED_TOOLS:
+        ax_B.text(bar.get_x() + bar.get_width() / 2, val + 4.0,
+                  "\u2716", ha="center", va="bottom", fontsize=10, color="black")
+
+ax_B.text(-0.10, 1.04, "B", transform=ax_B.transAxes, **_PANEL_KW)
+
+# ---------------------------------------------------------------------------
+# Panel C – Analysis 1: pairwise agreement heatmap
+# ---------------------------------------------------------------------------
+ax_C = fig_paper.add_subplot(gs_outer[1, 0])
+
+sns.heatmap(
+    agreement_clustered.astype(float),
+    mask=mask_upper,
+    annot=True,
+    fmt=".1f",
+    cmap="YlOrRd",
+    vmin=_a1_vmin,
+    vmax=100,
+    linewidths=0.4,
+    ax=ax_C,
+    annot_kws={"size": 6},
+    cbar_kws={"label": "Agreement (%)", "ticks": _a1_ticks},
+)
+ax_C.set_title(
+    "Pairwise prediction agreement (%)\n(hierarchical clustering)",
+    fontsize=16, fontweight="bold",
+)
+for tl in ax_C.get_xticklabels():
+    tl.set_color(COLOR_DL if tl.get_text() in DL_TOOLS else COLOR_ML)
+for tl in ax_C.get_yticklabels():
+    tl.set_color(COLOR_DL if tl.get_text() in DL_TOOLS else COLOR_ML)
+ax_C.set_xticklabels(ax_C.get_xticklabels(), rotation=45, ha="right", fontsize=9)
+ax_C.set_yticklabels(ax_C.get_yticklabels(), rotation=0, fontsize=9)
+
+legend_handles_C = [
+    mpatches.Patch(color=COLOR_DL, label="Deep Learning (DL)"),
+    mpatches.Patch(color=COLOR_ML, label="Machine Learning (ML)"),
+]
+ax_C.legend(handles=legend_handles_C, loc="upper right", fontsize=10, frameon=True)
+
+cbar_C = ax_C.collections[0].colorbar
+cbar_C.ax.tick_params(labelsize=9)
+cbar_C.set_label("Agreement (%)", fontsize=11)
+
+ax_C.text(-0.13, 1.04, "C", transform=ax_C.transAxes, **_PANEL_KW)
+
+# ---------------------------------------------------------------------------
+# Panel D – Analysis 3a: Spearman correlations
+# ---------------------------------------------------------------------------
+ax_D = fig_paper.add_subplot(gs_outer[1, 1])
+
+colors_bar_D = ["#d73027" if sig else "#92c5de" for sig in corr_df["Significant"]]
+ax_D.barh(corr_df["Property"], corr_df["Spearman rho"], color=colors_bar_D)
+ax_D.axvline(0, color="black", lw=0.8)
+ax_D.set_xlabel("Spearman \u03c1", fontsize=13)
+ax_D.set_title(
+    "Correlation: peptide error rate vs\nphysicochemical properties  (red = p < 0.05)",
+    fontsize=16, fontweight="bold",
+)
+ax_D.tick_params(axis="both", labelsize=11)
+ax_D.text(-0.10, 1.04, "D", transform=ax_D.transAxes, **_PANEL_KW)
+
+# ---------------------------------------------------------------------------
+# Panel E – Analysis 2: correctness heatmap (rebuilt natively)
+# Uses GridSpecFromSubplotSpec to nest the same internal layout (left
+# dendrogram | heatmap | side strips | legend) inside the bottom cell.
+# ---------------------------------------------------------------------------
+
+# The bottom cell spans both content columns
+ss_E = gs_outer[2, :]
+
+n_side_E    = 1 + len(available_props)
+n_tools_E   = len(tools_ordered)
+
+w_ld  = 2          # left dendrogram
+w_hm  = n_tools_E  # heatmap
+w_s   = 1          # each side strip
+w_leg = 12         # legend
+
+col_widths_E  = [w_ld, w_hm] + [w_s] * n_side_E + [w_leg]
+row_heights_E = [2, 18]
+
+gs_E = gridspec.GridSpecFromSubplotSpec(
+    2,
+    2 + n_side_E + 1,
+    subplot_spec=ss_E,
+    height_ratios=row_heights_E,
+    width_ratios=col_widths_E,
+    hspace=0.02,
+    wspace=0.03,
+)
+
+ax_E_top_dend  = fig_paper.add_subplot(gs_E[0, 1])
+ax_E_left_dend = fig_paper.add_subplot(gs_E[1, 0])
+ax_E_main      = fig_paper.add_subplot(gs_E[1, 1])
+ax_E_sides     = [fig_paper.add_subplot(gs_E[1, 2 + k]) for k in range(n_side_E)]
+ax_E_legend    = fig_paper.add_subplot(gs_E[:, 2 + n_side_E])
+ax_E_legend.set_axis_off()
+
+# Panel label E – placed on the left dendrogram row
+ax_E_top_dend.set_title(
+    "Prediction correctness by peptide (rows) and tool (columns)",
+    fontsize=16, fontweight="bold", pad=5,
+)
+ax_E_top_dend.text(-0.07, 1.35, "E", transform=ax_E_top_dend.transAxes, **_PANEL_KW)
+
+_DLWE = 0.6
+
+dendrogram(Z_cols, ax=ax_E_top_dend, orientation="top", no_labels=True,
+           color_threshold=0, above_threshold_color="black",
+           link_color_func=lambda k: "black")
+for coll in ax_E_top_dend.collections:
+    coll.set_linewidth(_DLWE)
+ax_E_top_dend.set_axis_off()
+
+dendrogram(Z_rows, ax=ax_E_left_dend, orientation="left", no_labels=True,
+           color_threshold=0, above_threshold_color="black",
+           link_color_func=lambda k: "black")
+for coll in ax_E_left_dend.collections:
+    coll.set_linewidth(_DLWE)
+ax_E_left_dend.set_axis_off()
+ax_E_left_dend.invert_yaxis()
+
+cmap_main_E = mcolors.LinearSegmentedColormap.from_list(
+    "correctness", ["#d73027", "#fee08b", "#1a9850"]
+)
+ax_E_main.imshow(
+    correctness_plot.values, aspect="auto",
+    cmap=cmap_main_E, vmin=0, vmax=1, interpolation="none",
+)
+ax_E_main.set_yticks([])
+ax_E_main.set_xticks(range(len(tools_ordered)))
+ax_E_main.set_xticklabels(tools_ordered, rotation=45, ha="right", fontsize=11)
+ax_E_main.tick_params(axis="x", bottom=True, top=False, labelbottom=True)
+for tl in ax_E_main.get_xticklabels():
+    tl.set_color(COLOR_DL if tl.get_text() in DL_TOOLS else COLOR_ML)
+
+cmap_class_E = mcolors.ListedColormap([COLOR_NONAMP, COLOR_AMP])
+ax_E_sides[0].imshow(
+    side_annot_raw["Ground truth"].values.reshape(-1, 1),
+    aspect="auto", cmap=cmap_class_E, vmin=0, vmax=1,
+)
+ax_E_sides[0].set_xticks([0])
+ax_E_sides[0].set_xticklabels(["Ground truth"], rotation=45, ha="right", fontsize=10)
+ax_E_sides[0].set_yticks([])
+
+for k, prop in enumerate(available_props):
+    ax_s = ax_E_sides[k + 1]
+    ax_s.imshow(
+        side_annot_raw[prop].values.reshape(-1, 1),
+        aspect="auto", cmap=PROP_CMAPS[k % len(PROP_CMAPS)],
+        vmin=0, vmax=1, interpolation="none",
+    )
+    ax_s.set_xticks([0])
+    ax_s.set_xticklabels(
+        [PROP_DISPLAY_NAMES.get(prop, prop)], rotation=45, ha="right", fontsize=10
+    )
+    ax_s.set_yticks([])
+
+# Re-draw the legend inside ax_E_legend using the same helper functions
+# defined during Analysis 2 (they close over ax via the 'ax' name, so we
+# temporarily rebind the module-level 'ax' variable they reference).
+_ax_saved = ax                              # save the old binding
+ax = ax_E_legend                            # point helpers at the new axes
+ax.set_xlim(0, 1)
+ax.set_ylim(0, 1)
+
+y = 1.0 - 0.015
+y = _section_header(ax, y, "Prediction correctness")
+y = _swatch_entry(ax, y, "#1a9850", "Correct")
+y = _swatch_entry(ax, y, "#fee08b", "No prediction")
+y = _swatch_entry(ax, y, "#d73027", "Incorrect")
+y -= H_GAP
+y = _section_header(ax, y, "Tool type")
+y = _swatch_entry(ax, y, COLOR_DL, "Deep Learning (DL)")
+y = _swatch_entry(ax, y, COLOR_ML, "Machine Learning (ML)")
+y -= H_GAP
+y = _section_header(ax, y, "Ground truth")
+y = _swatch_entry(ax, y, COLOR_AMP,    "AMP")
+y = _swatch_entry(ax, y, COLOR_NONAMP, "non-AMP")
+y -= H_GAP
+y = _section_header(ax, y, "Physicochemical properties")
+for k, prop in enumerate(available_props):
+    vmin, vmean, vmax = prop_stats[prop]
+    y = _gradient_entry(ax, y, prop, vmin, vmean, vmax, PROP_CMAPS[k % len(PROP_CMAPS)])
+
+ax = _ax_saved                              # restore
+
+# ── Save both formats ────────────────────────────────────────────────────────
+fig_paper.savefig(FIGURE_PDF_PATH)
+fig_paper.savefig(FIGURE_PNG_PATH, dpi=300)
+plt.close(fig_paper)
+print(f"Combined figure saved to:\n  {FIGURE_PDF_PATH}\n  {FIGURE_PNG_PATH}")

@@ -106,8 +106,8 @@ finally:
 print("=== Loading tool predictions ===")
 
 # -- AGRAMP --
-agramp_predictions = pd.read_csv(RESULTS / "agramp" / "results_3gram_9_letter.tsv", sep="\t")
-agramp_predictions = agramp_predictions.drop(columns=["Prob_NOAMP", "Peptide"])
+agramp_predictions = pd.read_csv(RESULTS / "agramp" / "3gram_9_letter_predictions.tsv", sep="\t")
+agramp_predictions = agramp_predictions.drop(columns=["SeqID", "Prob_NOAMP", "Peptide"])
 agramp_predictions.columns = ["AGRAMP_pred_prob", "AGRAMP_pred_label", "ID"]
 agramp_predictions["AGRAMP_pred_label"] = agramp_predictions["AGRAMP_pred_label"].map({"AMP": 1, "NOAMP": 0})
 
@@ -142,25 +142,25 @@ amplify_predictions.columns = ["ID", "AMPlify_pred_prob", "AMPlify_pred_label"]
 amplify_predictions["AMPlify_pred_label"] = amplify_predictions["AMPlify_pred_label"].map({"AMP": 1, "non-AMP": 0})
 
 # -- CAMPR4 (ANN, RF, SVM classifiers) --
-campr4_ann_predictions = pd.read_csv(RESULTS / "CAMPR4" / "results_ann.tsv", sep="\t")
+campr4_ann_predictions = pd.read_csv(RESULTS / "campr4" / "ann_predictions.tsv", sep="\t")
 campr4_ann_predictions.columns = ["ID", "CAMPR4_ann_pred_label", "CAMPR4_ann_pred_prob"]
 campr4_ann_predictions["CAMPR4_ann_pred_label"] = campr4_ann_predictions["CAMPR4_ann_pred_label"].map({"AMP": 1, "NAMP": 0})
 
-campr4_rf_predictions = pd.read_csv(RESULTS / "CAMPR4" / "results_rf.tsv", sep="\t")
+campr4_rf_predictions = pd.read_csv(RESULTS / "campr4" / "rf_predictions.tsv", sep="\t")
 campr4_rf_predictions.columns = ["ID", "CAMPR4_rf_pred_label", "CAMPR4_rf_pred_prob"]
 campr4_rf_predictions["CAMPR4_rf_pred_label"] = campr4_rf_predictions["CAMPR4_rf_pred_label"].map({"AMP": 1, "NAMP": 0})
 
-campr4_svm_predictions = pd.read_csv(RESULTS / "CAMPR4" / "results_svm.tsv", sep="\t")
+campr4_svm_predictions = pd.read_csv(RESULTS / "campr4" / "svm_predictions.tsv", sep="\t")
 campr4_svm_predictions.columns = ["ID", "CAMPR4_svm_pred_label", "CAMPR4_svm_pred_prob"]
 campr4_svm_predictions["CAMPR4_svm_pred_label"] = campr4_svm_predictions["CAMPR4_svm_pred_label"].map({"AMP": 1, "NAMP": 0})
 
 # -- DLFea4AMPGen --
-# According to the repository documentation: label 0 = positive (AMP), 1 = negative.
-dlfea4ampgen_predictions = pd.read_csv(RESULTS / "DLFea4AMPGen" / "x_test_maximo_wo_length_predict_result.csv")
+# According to the repository documentation: label 0 = positive (ABP), 1 = negative.
+dlfea4ampgen_predictions = pd.read_csv(RESULTS / "dlfea4ampgen" / "dlfea4ampgen_predictions.csv")
 dlfea4ampgen_predictions = dlfea4ampgen_predictions.drop(columns=["Unnamed: 0", "seq"])
 dlfea4ampgen_predictions.columns = ["ID", "DLFea4AMPGen_pred_label", "DLFea4AMPGen_pred_prob"]
 dlfea4ampgen_predictions["DLFea4AMPGen_pred_label"] = dlfea4ampgen_predictions["DLFea4AMPGen_pred_label"].map({0: 1, 1: 0})
-dlfea4ampgen_predictions["DLFea4AMPGen_pred_prob"]  = 1 - dlfea4ampgen_predictions["DLFea4AMPGen_pred_prob"]  # probability of AMP
+dlfea4ampgen_predictions["DLFea4AMPGen_pred_prob"]  = 1 - dlfea4ampgen_predictions["DLFea4AMPGen_pred_prob"]  # probability of ABP
 
 # -- KT-AMPpred --
 kt_amppred_predictions = pd.read_csv(RESULTS / "kt_amppred" / "kt_amppred_predictions.csv")
@@ -199,7 +199,7 @@ macrel_predictions.columns = ["ID", "Macrel_pred_label", "Macrel_pred_prob"]
 macrel_predictions["Macrel_pred_label"] = macrel_predictions["Macrel_pred_label"].astype(int)
 
 # -- MultiAMP --
-multiamp_predictions = pd.read_csv(RESULTS / "MultiAMP" / "predictions.csv")
+multiamp_predictions = pd.read_csv(RESULTS / "multiamp" / "multiamp_predictions.csv")
 multiamp_predictions = multiamp_predictions.drop(columns=["sequence", "length"])
 multiamp_predictions.columns = ["ID", "MultiAMP_pred_prob", "MultiAMP_pred_label"]
 multiamp_predictions["MultiAMP_pred_label"] = multiamp_predictions["MultiAMP_pred_label"].map({"AMP": 1, "non-AMP": 0})
@@ -280,7 +280,7 @@ cols_order = [
     "From_UniProt_in_ABPs",
     # Tool training IDs and ground truths (chronological by publication year)
     "AMP_Scanner_ID", "AMP_Scanner_ground_truth",
-    "Macrel_ground_truth",
+    "Macrel_ID", "Macrel_ground_truth",
     "amPEPpy_AMP_ID", "amPEPpy_nonAMP_ID", "amPEPpy_ground_truth",
     "LMPred_ID", "LMPred_ground_truth",
     "AMPlify_ID", "AMPlify_ground_truth",
