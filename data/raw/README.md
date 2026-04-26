@@ -117,7 +117,7 @@ The following tools are covered in the benchmark. The table lists data availabil
 ¹ iAMP-2L provides training and test sequences embedded in PDF supplementary files. Discrepancies were found between the dataset described in the paper and the supplementary file contents.  
 ² PyAMPA was trained on the AMPlify dataset (retrievable from `amplify/`), but does not provide its own data files.
 
-Refer to each tool's GitHub repository or publication for the exact download location of its training data. For tools that can be downloaded automatically, a convenience script `data/raw/tools/download_all.sh` is provided (see end of this section). The following tools **cannot** be downloaded automatically and must be retrieved manually:
+For tools whose datasets can be downloaded automatically, a convenience script `data/raw/tools/download_all.sh` is provided (see end of this section). For the following tools data **cannot** be downloaded automatically and must be retrieved manually:
 
 - **iAMP-2L** — sequences are embedded in PDF supplementary files; manual text extraction is required (§ 2.1).
 - **AGRAMP** — the dataset server does not support direct download; files must be saved via right-click (§ 2.14).
