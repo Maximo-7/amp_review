@@ -5,9 +5,9 @@
 
 process plapd {
 
-    label 'process_gpu'
+    label 'gpu1'
 
-    container 'alvaromaximo/plapd:1.1'
+    container 'alvaromaximo/plapd:1.1-model'
 
     input:
     path input_fasta

@@ -1,6 +1,6 @@
-# Required models for predictions
+# Models utilized for predictions (incomplete)
 
-This folder contains model files not cloned via git in the docker images utilized in this review.
+This folder contains model files not cloned via Git in the Docker images utilized in this review. These files are already included in their respective Docker image developped for the evaluation pipeline. This documentation is only included for end-to-end reproducibility.
 - (*) Models trained for this review.
 - (+) Models downloaded from external sources (GitHub, Dropbox, Zenodo or HuggingFace).
 

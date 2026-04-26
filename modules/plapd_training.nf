@@ -7,9 +7,9 @@
 
  process plapdTraining {
 
-    label 'process_gpu'
+    label 'gpu0'
 
-    container 'alvaromaximo/plapd:1.1'
+    container 'alvaromaximo/plapd:1.1-base'
 
     input:
     path train_csv

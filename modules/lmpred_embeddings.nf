@@ -6,9 +6,9 @@
 
 process lmpredEmbeddings {
 
-    label 'process_gpu'
+    label 'gpu0'
 
-    container 'alvaromaximo/lmpred:1.2'
+    container 'alvaromaximo/lmpred:1.2-base'
 
     input:
     path input_csv

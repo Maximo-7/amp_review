@@ -5,9 +5,9 @@
 
 process ktAmppred {
 
-    label 'process_gpu'
+    label 'gpu1'
 
-    container 'alvaromaximo/kt_amppred:1.2'
+    container 'alvaromaximo/kt_amppred:1.1-model'
 
     input:
     path input_fasta
@@ -20,6 +20,6 @@ process ktAmppred {
     python /app/kt_amppred/kt_amppred_predict.py \
         --fasta '${input_fasta}' \
         --model_dir /app/kt_amppred/model \
-        --classifier /app/kt_amppred/model/classifier_weights.pth'
+        --classifier /app/kt_amppred/model/classifier_weights.pth
     """
 }

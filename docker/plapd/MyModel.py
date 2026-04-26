@@ -1,10 +1,11 @@
 # Adapted from MyModel.py
 # Source: https://github.com/lichaozhang2/PLAPD
-# Changes: ─────── Added ─────── blocks and # added or # modified lines
+# Changes: ─────── Added ─────── blocks,
+# cuda device and # added or # modified lines
 
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import esm
 import math
 import torch
@@ -92,7 +93,7 @@ class ESM(nn.Module):
         batch_labels, batch_strs, batch_tokens = self.batch_converter(data)
         # Extract per-residue representations (on GPU)
         with torch.no_grad():
-            results = self.esm_model(batch_tokens.cuda(), repr_layers=[33], return_contacts=False)
+            results = self.esm_model(batch_tokens.to(next(self.esm_model.parameters()).device), repr_layers=[33], return_contacts=False) # modified
         token_representations = results["representations"][33][:, 1:-1]
 
         # [batch, L, 1280]
@@ -176,9 +177,10 @@ class AIMP(torch.nn.Module):
 if __name__ == '__main__':
     args = parse_args()
     
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = AIMP(pre_feas_dim=1280, hidden=1280, n_transformer=1, dropout=0.5)
-    model.cuda()
-    model.load_state_dict(torch.load(args.model))
+    model.to(device)
+    model.load_state_dict(torch.load(args.model, map_location=device))
     model.eval()
 
     df_sequences = fasta_to_df(args.input_fasta)

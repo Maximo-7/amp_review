@@ -5,7 +5,7 @@
 
 process multiamp {
 
-    label 'process_gpu'
+    label 'gpu1'
 
     container 'alvaromaximo/multiamp:1.1'
 

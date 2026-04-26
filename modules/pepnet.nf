@@ -5,7 +5,7 @@
 
 process pepnet {
 
-    label 'process_gpu'
+    label 'gpu1'
 
     container 'alvaromaximo/pepnet:1.0'
 

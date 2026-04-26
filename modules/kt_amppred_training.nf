@@ -7,9 +7,9 @@
 
 process ktAmppredTraining {
 
-    label 'process_gpu'
+    label 'gpu0'
 
-    container 'alvaromaximo/kt_amppred:1.1'
+    container 'alvaromaximo/kt_amppred:1.1-base'
 
     input:
     path train_tsv

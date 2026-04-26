@@ -6,9 +6,9 @@
 
 process ampBert {
 
-    label 'process_gpu'
+    label 'gpu0'
 
-    container 'alvaromaximo/amp_bert:1.3'
+    container 'alvaromaximo/amp_bert:1.2-model'
 
     input:
     path input_csv
