@@ -11,7 +11,12 @@ results/
 # Models (usually heavy files)
 models/*
 !models/README.md
+data/raw/tools/pepnet/*/checkpoints/
+data/raw/tools/pepnet/*/feature/
 
 # Uniprot unreviewed sequences (large FASTA)
 # Added .zip instead
 data/raw/non_amps/uniprot_unreviewed.fasta
+
+# Unused files
+data/raw/tools/multiamp/structure/

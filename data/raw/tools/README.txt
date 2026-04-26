@@ -1,1 +1,0 @@
-This folder contains the manually downloaded tools datasets utilized to check data leakage and train LMPred, AMP-BERT, KT-AMPpred and PLAPD models.
