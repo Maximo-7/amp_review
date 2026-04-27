@@ -56,10 +56,24 @@ Files are stored in `data/raw/abps/`. Only sequences with documented antibacteri
   2. Select **Gram+** from the dropdown, then also select **Gram−** (both should appear as tags in the selector).
   3. Click the **Search** button at the bottom of the left panel.
   4. Once results load, click **Export Data** (top right).
-  5. In the export panel, click **Export FASTA Data**.
-- **Downloaded file:** `peptides-fasta.txt`
-- **Rename to:** `dbaasp.fasta`
-- **Downloaded entries:** 1,977
+  5. In the export panel, select a segment from the **"Please select segment to download"** dropdown, complete the **reCAPTCHA**, and click **Export FASTA Data**. Repeat for every segment in order. Each segment downloads as a separate file (`peptides-fasta.txt`, `peptides-fasta (1).txt`, …, `peptides-fasta (N).txt`).
+- **Downloaded files:** one `peptides-fasta*.txt` per segment (11 files in this dataset, for segments **"0 – 2000"** through **"20000 – 21583"**); the number of segments may vary in future downloads.
+- **Concatenate and rename:**
+  ```bash
+  cat "peptides-fasta.txt" \
+      "peptides-fasta (1).txt" \
+      "peptides-fasta (2).txt" \
+      "peptides-fasta (3).txt" \
+      "peptides-fasta (4).txt" \
+      "peptides-fasta (5).txt" \
+      "peptides-fasta (6).txt" \
+      "peptides-fasta (7).txt" \
+      "peptides-fasta (8).txt" \
+      "peptides-fasta (9).txt" \
+      "peptides-fasta (10).txt" > dbaasp.fasta
+  ```
+  Adjust the list if the number of segments differs in a future download.
+- **Downloaded entries:** 20,980
 
 ### 1.5 AMPDB — Antimicrobial Peptide Database
 
@@ -823,7 +837,7 @@ The table below summarises entry counts at each stage. Note that future download
 | APD | 5,496 | 5,494 | 5,494 |
 | DRAMP | 4,159 | 4,049 | 4,010 |
 | dbAMP | 7,625 | 7,622 | 7,619 |
-| DBAASP | 1,977 | 1,860 | 1,775 |
+| DBAASP | 20,980 | 17,970 | 17,009 |
 | AMPDB | 8,038 | 5,593 | 5,593 |
 | UniProt reviewed (Swiss-Prot) | 17,637 | 16,191 | 16,191 |
 | UniProt unreviewed (TrEMBL) | 743,594 | 656,985 | 656,985 |
