@@ -613,9 +613,9 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes as _inset_axes
 # each block.  Heights are in "units" that we'll map to axes-fraction at the
 # end, once we know the total.
 
-FSEC  = 14    # section-title font size
-FENT  = 13    # entry font size
-FNUM  = 11    # gradient tick-label font size
+FSEC  = 21    # section-title font size
+FENT  = 19    # entry font size
+FNUM  = 16    # gradient tick-label font size
 
 # Helper: draw a thin horizontal separator line across the legend axes
 def _hline(ax, y, lw=0.8, color="#aaaaaa"):
@@ -929,12 +929,12 @@ if all_coef_rows:
 FIGURE_PDF_PATH = OUTPUT_FIGURE_DIR / "combined_figure.pdf"
 FIGURE_PNG_PATH = OUTPUT_FIGURE_DIR / "combined_figure.png"
 
-_PANEL_KW = dict(fontsize=26, fontweight="bold", va="top", ha="left")
+_PANEL_KW = dict(fontsize=40, fontweight="bold", va="top", ha="left")
 
 # ── Outer grid: 3 rows × 2 columns ─────────────────────────────────────────
 # Symmetric left/right margins are set via subplots_adjust
 fig_paper = plt.figure(figsize=(26, 34))
-fig_paper.subplots_adjust(left=0.07, right=0.97, top=0.97, bottom=0.05)
+fig_paper.subplots_adjust(left=0.09, right=0.94, top=0.96, bottom=0.08)
 
 gs_outer = gridspec.GridSpec(
     3, 2,
@@ -955,14 +955,14 @@ for (tool, (fpr, tpr, auroc)), color in zip(roc_data_sorted.items(), roc_colors)
     ax_A.plot(fpr, tpr, lw=1.5, color=color, label=f"{tool} (AUROC = {auroc:.1f}%)")
 
 ax_A.plot([0, 1], [0, 1], "k--", lw=1, label="Random classifier")
-ax_A.set_xlabel("False Positive Rate", fontsize=13)
-ax_A.set_ylabel("True Positive Rate", fontsize=13)
-ax_A.set_title("ROC curves", fontsize=16, fontweight="bold")
-ax_A.legend(loc="lower right", fontsize=8)
-ax_A.tick_params(axis="both", labelsize=11)
+ax_A.set_xlabel("False Positive Rate", fontsize=22)
+ax_A.set_ylabel("True Positive Rate", fontsize=22)
+ax_A.set_title("ROC curves", fontsize=24, fontweight="bold")
+ax_A.legend(loc="lower right", fontsize=11)
+ax_A.tick_params(axis="both", labelsize=19)
 ax_A.set_xlim([0, 1])
 ax_A.set_ylim([0, 1.02])
-ax_A.text(-0.12, 1.04, "A", transform=ax_A.transAxes, **_PANEL_KW)
+ax_A.text(-0.12, 1.11, "A", transform=ax_A.transAxes, **_PANEL_KW)
 
 # ---------------------------------------------------------------------------
 # Panel B – Analysis 0: balanced accuracy bar chart
@@ -975,12 +975,11 @@ bars_B = ax_B.bar(
     metrics_sorted["Balanced Accuracy"],
     color=bar_colors_B,
 )
-ax_B.set_xlabel("Tool", fontsize=13)
-ax_B.set_ylabel("Balanced Accuracy (%)", fontsize=13)
-ax_B.set_title("Balanced Accuracy by Tool (ordered highest to lowest)", fontsize=16, fontweight="bold")
+ax_B.set_ylabel("Balanced Accuracy (%)", fontsize=22)
+ax_B.set_title("Balanced Accuracy by Tool (ordered highest to lowest)", fontsize=24, fontweight="bold")
 ax_B.set_ylim([0, 110])
 ax_B.axhline(50, color="gray", linestyle="--", lw=1)
-ax_B.tick_params(axis="y", labelsize=11)
+ax_B.tick_params(axis="y", labelsize=19)
 
 legend_handles_B = [
     mpatches.Patch(color=COLOR_DL, label="Deep Learning (DL)"),
@@ -992,23 +991,23 @@ legend_handles_B = [
     mlines.Line2D([], [], color="black", marker="$\u2716$", linestyle="none",
                   markersize=7, label="Seq. length restrictions (subset only)"),
 ]
-ax_B.legend(handles=legend_handles_B, fontsize=9)
+ax_B.legend(handles=legend_handles_B, fontsize=14)
 ax_B.set_xticks(range(len(metrics_sorted)))
-ax_B.set_xticklabels(metrics_sorted["Model"], rotation=45, ha="right", fontsize=9)
+ax_B.set_xticklabels(metrics_sorted["Model"], rotation=45, ha="right", fontsize=14)
 
 for bar, (_, row) in zip(bars_B, metrics_sorted.iterrows()):
     val  = row["Balanced Accuracy"]
     tool = row["Model"]
     ax_B.text(bar.get_x() + bar.get_width() / 2, val + 0.5,
-              f"{val:.1f}", ha="center", va="bottom", fontsize=6)
+              f"{val:.1f}", ha="center", va="bottom", fontsize=10)
     if tool in UNKNOWN_TRAINING_TOOLS:
         ax_B.text(bar.get_x() + bar.get_width() / 2, val + 4.0,
-                  "\u2605", ha="center", va="bottom", fontsize=10, color="black")
+                  "\u2605", ha="center", va="bottom", fontsize=15, color="black")
     if tool in LENGTH_RESTRICTED_TOOLS:
         ax_B.text(bar.get_x() + bar.get_width() / 2, val + 4.0,
-                  "\u2716", ha="center", va="bottom", fontsize=10, color="black")
+                  "\u2716", ha="center", va="bottom", fontsize=15, color="black")
 
-ax_B.text(-0.10, 1.04, "B", transform=ax_B.transAxes, **_PANEL_KW)
+ax_B.text(-0.10, 1.11, "B", transform=ax_B.transAxes, **_PANEL_KW)
 
 # ---------------------------------------------------------------------------
 # Panel C – Analysis 1: pairwise agreement heatmap
@@ -1025,31 +1024,31 @@ sns.heatmap(
     vmax=100,
     linewidths=0.4,
     ax=ax_C,
-    annot_kws={"size": 6},
+    annot_kws={"size": 10},
     cbar_kws={"label": "Agreement (%)", "ticks": _a1_ticks},
 )
 ax_C.set_title(
     "Pairwise prediction agreement (%)\n(hierarchical clustering)",
-    fontsize=16, fontweight="bold",
+    fontsize=24, fontweight="bold",
 )
 for tl in ax_C.get_xticklabels():
     tl.set_color(COLOR_DL if tl.get_text() in DL_TOOLS else COLOR_ML)
 for tl in ax_C.get_yticklabels():
     tl.set_color(COLOR_DL if tl.get_text() in DL_TOOLS else COLOR_ML)
-ax_C.set_xticklabels(ax_C.get_xticklabels(), rotation=45, ha="right", fontsize=9)
-ax_C.set_yticklabels(ax_C.get_yticklabels(), rotation=0, fontsize=9)
+ax_C.set_xticklabels(ax_C.get_xticklabels(), rotation=45, ha="right", fontsize=14)
+ax_C.set_yticklabels(ax_C.get_yticklabels(), rotation=0, fontsize=14)
 
 legend_handles_C = [
     mpatches.Patch(color=COLOR_DL, label="Deep Learning (DL)"),
     mpatches.Patch(color=COLOR_ML, label="Machine Learning (ML)"),
 ]
-ax_C.legend(handles=legend_handles_C, loc="upper right", fontsize=10, frameon=True)
+ax_C.legend(handles=legend_handles_C, loc="upper right", fontsize=15, frameon=True)
 
 cbar_C = ax_C.collections[0].colorbar
-cbar_C.ax.tick_params(labelsize=9)
-cbar_C.set_label("Agreement (%)", fontsize=11)
+cbar_C.ax.tick_params(labelsize=14)
+cbar_C.set_label("Agreement (%)", fontsize=17)
 
-ax_C.text(-0.13, 1.04, "C", transform=ax_C.transAxes, **_PANEL_KW)
+ax_C.text(-0.13, 1.11, "C", transform=ax_C.transAxes, **_PANEL_KW)
 
 # ---------------------------------------------------------------------------
 # Panel D – Analysis 3a: Spearman correlations
@@ -1057,15 +1056,17 @@ ax_C.text(-0.13, 1.04, "C", transform=ax_C.transAxes, **_PANEL_KW)
 ax_D = fig_paper.add_subplot(gs_outer[1, 1])
 
 colors_bar_D = ["#d73027" if sig else "#92c5de" for sig in corr_df["Significant"]]
-ax_D.barh(corr_df["Property"], corr_df["Spearman rho"], color=colors_bar_D)
+corr_df_plot = corr_df.copy()
+corr_df_plot["Property"] = corr_df_plot["Property"].map(lambda p: PROP_DISPLAY_NAMES.get(p, p))
+ax_D.barh(corr_df_plot["Property"], corr_df["Spearman rho"], color=colors_bar_D)
 ax_D.axvline(0, color="black", lw=0.8)
-ax_D.set_xlabel("Spearman \u03c1", fontsize=13)
+ax_D.set_xlabel("Spearman \u03c1", fontsize=22)
 ax_D.set_title(
     "Correlation: peptide error rate vs\nphysicochemical properties  (red = p < 0.05)",
-    fontsize=16, fontweight="bold",
+    fontsize=24, fontweight="bold",
 )
-ax_D.tick_params(axis="both", labelsize=11)
-ax_D.text(-0.10, 1.04, "D", transform=ax_D.transAxes, **_PANEL_KW)
+ax_D.tick_params(axis="both", labelsize=19)
+ax_D.text(-0.10, 1.11, "D", transform=ax_D.transAxes, **_PANEL_KW)
 
 # ---------------------------------------------------------------------------
 # Panel E – Analysis 2: correctness heatmap (rebuilt natively)
@@ -1082,7 +1083,7 @@ n_tools_E   = len(tools_ordered)
 w_ld  = 2          # left dendrogram
 w_hm  = n_tools_E  # heatmap
 w_s   = 1          # each side strip
-w_leg = 12         # legend
+w_leg = 18         # legend
 
 col_widths_E  = [w_ld, w_hm] + [w_s] * n_side_E + [w_leg]
 row_heights_E = [2, 18]
@@ -1107,9 +1108,9 @@ ax_E_legend.set_axis_off()
 # Panel label E – placed on the left dendrogram row
 ax_E_top_dend.set_title(
     "Prediction correctness by peptide (rows) and tool (columns)",
-    fontsize=16, fontweight="bold", pad=5,
+    fontsize=24, fontweight="bold", pad=5,
 )
-ax_E_top_dend.text(-0.07, 1.35, "E", transform=ax_E_top_dend.transAxes, **_PANEL_KW)
+ax_E_top_dend.text(-0.28, 1.05, "E", transform=ax_E_top_dend.transAxes, **_PANEL_KW)
 
 _DLWE = 0.6
 
@@ -1137,7 +1138,7 @@ ax_E_main.imshow(
 )
 ax_E_main.set_yticks([])
 ax_E_main.set_xticks(range(len(tools_ordered)))
-ax_E_main.set_xticklabels(tools_ordered, rotation=45, ha="right", fontsize=11)
+ax_E_main.set_xticklabels(tools_ordered, rotation=45, ha="right", fontsize=17)
 ax_E_main.tick_params(axis="x", bottom=True, top=False, labelbottom=True)
 for tl in ax_E_main.get_xticklabels():
     tl.set_color(COLOR_DL if tl.get_text() in DL_TOOLS else COLOR_ML)
@@ -1148,7 +1149,7 @@ ax_E_sides[0].imshow(
     aspect="auto", cmap=cmap_class_E, vmin=0, vmax=1,
 )
 ax_E_sides[0].set_xticks([0])
-ax_E_sides[0].set_xticklabels(["Ground truth"], rotation=45, ha="right", fontsize=10)
+ax_E_sides[0].set_xticklabels(["Ground truth"], rotation=45, ha="right", fontsize=16)
 ax_E_sides[0].set_yticks([])
 
 for k, prop in enumerate(available_props):
@@ -1160,7 +1161,7 @@ for k, prop in enumerate(available_props):
     )
     ax_s.set_xticks([0])
     ax_s.set_xticklabels(
-        [PROP_DISPLAY_NAMES.get(prop, prop)], rotation=45, ha="right", fontsize=10
+        [PROP_DISPLAY_NAMES.get(prop, prop)], rotation=45, ha="right", fontsize=16
     )
     ax_s.set_yticks([])
 
@@ -1171,6 +1172,12 @@ _ax_saved = ax                              # save the old binding
 ax = ax_E_legend                            # point helpers at the new axes
 ax.set_xlim(0, 1)
 ax.set_ylim(0, 1)
+
+# Stretch the legend moderately so entries are spread out with visible gaps.
+H_SEC  = H_SEC  * 1.2
+H_ROW  = H_ROW  * 1.2
+H_GRAD = H_GRAD * 1.2
+H_GAP  = H_GAP  * 1.2
 
 y = 1.0 - 0.015
 y = _section_header(ax, y, "Prediction correctness")

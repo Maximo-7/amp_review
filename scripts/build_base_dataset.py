@@ -42,6 +42,9 @@ EVAL_DIR      = PROCESSED / "evaluation_dataset"
 INTERIM.mkdir(parents=True, exist_ok=True)
 EVAL_DIR.mkdir(parents=True, exist_ok=True)
 
+# Number of parts to split the evaluation FASTA for AGRAMP submission
+AGRAMP_SPLIT_N = 9
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -550,9 +553,32 @@ df_to_fasta(
     EVAL_DIR / "evaluation_dataset_geq_10aa.fasta",  # required by AMP Scanner
 )
 
+# -- FASTA split for AGRAMP manual submission --
+# The AGRAMP web server enforces a per-submission sequence limit, so
+# evaluation_dataset.fasta is divided into AGRAMP_SPLIT_N roughly equal parts.
+# Ceiling division ensures all sequences are covered even when the total is not
+# evenly divisible. Parts are written to splitted_fasta/ as complete records.
+SPLIT_DIR = EVAL_DIR / "splitted_fasta"
+SPLIT_DIR.mkdir(parents=True, exist_ok=True)
+
+fasta_records = list(SeqIO.parse(EVAL_DIR / "evaluation_dataset.fasta", "fasta"))
+total_seqs    = len(fasta_records)
+per_part      = (total_seqs + AGRAMP_SPLIT_N - 1) // AGRAMP_SPLIT_N  # ceiling division
+
+for part_idx in range(AGRAMP_SPLIT_N):
+    start  = part_idx * per_part
+    end    = min(start + per_part, total_seqs)
+    chunk  = fasta_records[start:end]
+    if not chunk:  # fewer sequences than requested parts
+        break
+    out_path = SPLIT_DIR / f"evaluation_dataset_part{part_idx + 1}.fasta"
+    SeqIO.write(chunk, out_path, "fasta")
+    print(f"  Part {part_idx + 1:>2}: {len(chunk):>5} sequences → {out_path.name}")
+
 
 # ===========================================================================
 
 print("Done.")
 print(f"  Evaluation dataset    → {EVAL_DIR}")
+print(f"  AGRAMP split FASTA    → {SPLIT_DIR}")
 print(f"  Complete base dataset → {INTERIM / 'complete_dataset_base.csv'}")
