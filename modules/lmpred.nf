@@ -5,9 +5,7 @@
 
 process lmpred {
 
-    label 'gpu0'
-
-    container 'alvaromaximo/lmpred:1.2-model'
+    container 'alvaromaximo/lmpred:1.2-model-cpu'
 
     input:
     path embeddings_npy

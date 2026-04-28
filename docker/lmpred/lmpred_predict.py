@@ -3,6 +3,9 @@
 # Changes: new script for CLI prediction on evaluation dataset.
 # The model with the best reported performance (T5 trained on UniRef50) was selected.
 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+
 import argparse
 import numpy as np
 import pandas as pd

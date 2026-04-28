@@ -1,10 +1,10 @@
-FROM tensorflow/tensorflow:2.16.1-gpu
+FROM tensorflow/tensorflow:2.16.1
 
-ENV NVIDIA_VISIBLE_DEVICES=all
-ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+# ENV NVIDIA_VISIBLE_DEVICES=all
+# ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
-RUN apt-get update && apt-get install -y libnccl2 && \
-    rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y libnccl2 && \
+#     rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir --no-deps \
     torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0
