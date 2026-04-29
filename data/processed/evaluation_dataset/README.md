@@ -21,3 +21,17 @@ each file can be submitted to AGRAMP independently for manual prediction.
 Sequences are never split mid-record: every file starts with a `>` header and
 ends with a complete sequence.  The number of parts is controlled by the
 `AGRAMP_SPLIT_N` variable in `build_base_dataset.py`.
+
+## Cleaning manually concatenated AGRAMP results
+
+After collecting all AGRAMP predictions, concatenate the per-part result files
+manually and run the convenience script provided in `scripts/`:
+
+```bash
+bash scripts/clean_agramp_results.sh results/tools_predictions/agramp/3gram_9_letter_predictions.tsv
+```
+
+This rewrites `3gram_9_letter_predictions.tsv` in the same folder, with:
+- a single header line (duplicate headers from each part removed)
+- no blank lines
+- a single trailing newline
