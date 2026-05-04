@@ -84,7 +84,7 @@ Files are stored in `data/raw/abps/`. Only sequences with documented antibacteri
 - **Downloaded files:**
   - `Anti-gram-negative dataset.fasta` → rename to `ampdb_agn.fasta`
   - `Anti-gram-positive dataset.fasta` → rename to `ampdb_agp.fasta`
-- **Downloaded entries:** 5,800 (Gram-negative) and 2,238 (Gram-positive), as reported on the website (8,038 combined).
+- **Downloaded entries:** 5,800 anti-Gram-negative and 2,238 anti-Gram-positive; 6,446 distinct IDs.
 
 ---
 
@@ -810,8 +810,8 @@ NOT (keyword:KW-0078) NOT (keyword:KW-0081) NOT (keyword:KW-0425)
 - **Downloaded file:** e.g. `uniprotkb_length_5_TO_255_NOT_keyword_K_2026_04_21.fasta.gz` *(may be compressed)*
 - **Rename to:** `uniprot_unreviewed.fasta`
 - **Note:** Decompress the file before running the pipeline if it was downloaded as `.gz`.
-- **Downloaded entries:** 743,594 *(the processing pipeline subsamples this file to balance the dataset)*
-
+- **Downloaded entries:** 743,594
+> **Note:** The processing pipeline subsamples this file to balance the dataset only if the number of ABPs for evaluation exceeds the number of reviewed non-AMPs for evaluation.
 ---
 
 ## 4. Sequence Counts After Preprocessing
@@ -838,6 +838,6 @@ The table below summarises entry counts at each stage. Note that future download
 | DRAMP | 4,159 | 4,049 | 4,010 |
 | dbAMP | 7,625 | 7,622 | 7,619 |
 | DBAASP | 20,980 | 17,970 | 17,009 |
-| AMPDB | 8,038 | 5,593 | 5,593 |
+| AMPDB | 6,446 | 5,593 | 5,593 |
 | UniProt reviewed (Swiss-Prot) | 17,637 | 16,191 | 16,191 |
 | UniProt unreviewed (TrEMBL) | 743,594 | 656,985 | 656,985 |
