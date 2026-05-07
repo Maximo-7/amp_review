@@ -8,10 +8,12 @@ Expected project layout (paths relative to project root):
     results/evaluation/                    -- output directory for all plots and tables
 
 Analyses:
-    0  - Balanced accuracy bar chart (ordered highest to lowest)
+    0a - Balanced accuracy bar chart (ordered highest to lowest)
+    0b - Sensitivity bar chart (ordered highest to lowest)
+    0c - Specificity bar chart (ordered highest to lowest)
     1  - Pairwise agreement matrix (hierarchical clustering heatmap,
          tool labels coloured by ML vs DL)
-    2  - Prediction correctness heatmap with clustering (peptides x tools),
+    2  - TP/TN/FP/FN/No-prediction heatmap with clustering (peptides x tools),
          plus side columns for true class and physicochemical properties
     3a - Spearman correlation between peptide error rate and physicochemical
          properties
@@ -69,7 +71,9 @@ DATASET_PATH               = ROOT / "data" / "processed" / "complete_dataset.csv
 OUTPUT_METRICS_PATH        = ROOT / "results" / "evaluation" / "evaluation_metrics.csv"
 OUTPUT_ROC_PATH            = ROOT / "results" / "evaluation" / "roc_curves.png"
 OUTPUT_BEST_PREDICTED_PATH = ROOT / "results" / "evaluation" / "best_predicted_sequences.csv"
-OUTPUT_ANALYSIS_0_PATH     = ROOT / "results" / "evaluation" / "analysis_0_balanced_accuracy.png"
+OUTPUT_ANALYSIS_0A_PATH    = ROOT / "results" / "evaluation" / "analysis_0a_balanced_accuracy.png"
+OUTPUT_ANALYSIS_0B_PATH    = ROOT / "results" / "evaluation" / "analysis_0b_sensitivity.png"
+OUTPUT_ANALYSIS_0C_PATH    = ROOT / "results" / "evaluation" / "analysis_0c_specificity.png"
 OUTPUT_ANALYSIS_1_PATH     = ROOT / "results" / "evaluation" / "analysis_1_agreement_matrix.png"
 OUTPUT_ANALYSIS_2_PATH     = ROOT / "results" / "evaluation" / "analysis_2_correctness_heatmap.png"
 OUTPUT_ANALYSIS_3A_PATH    = ROOT / "results" / "evaluation" / "analysis_3a_property_correlations.png"
@@ -107,8 +111,8 @@ TOOLS = {
 
 DL_TOOLS = {
     "AMP Scanner", "LMPred", "AMPlify", "Ma et al. (2022)",
-    "CAMPR4 ANN", "AMP-BERT", "AMPFinder",
-    "PepNet", "KT-AMPpred", "PLAPD", "DLFea4AMPGen", "MultiAMP",
+    "CAMPR4 ANN", "AMP-BERT", "PepNet",
+    "KT-AMPpred", "PLAPD", "DLFea4AMPGen", "MultiAMP",
 }
 
 UNKNOWN_TRAINING_TOOLS = {
@@ -149,9 +153,46 @@ PROP_DISPLAY_NAMES = {
 COLOR_DL = "#e07b39"   # warm orange  -> deep learning
 COLOR_ML = "#4a90d9"   # steel blue   -> machine learning
 
-# AMP/non-AMP: clearly distinct from both DL (orange) and ML (blue)
-COLOR_AMP    = "#6a0dad"   # purple  (avoids clash with red/green heatmap)
-COLOR_NONAMP = "#b8860b"   # dark gold (avoids clash with red/green heatmap)
+# AMP/non-AMP: coherent with heatmap TP/FP (green family) and TN/FN (red family).
+# AMP ground truth → green family (coherent with TP/FP columns)
+# non-AMP ground truth → red family (coherent with TN/FN columns)
+COLOR_AMP    = "#005824"   # very dark forest green (distinct from TP bright green)
+COLOR_NONAMP = "#67000d"   # very dark crimson      (distinct from FP/FN reds)
+
+# ── 5-class heatmap colour palette ──────────────────────────────────────────
+# Numeric codes are ordered by semantic distance so that Euclidean distance
+# used in hierarchical clustering reflects biological meaning:
+#   correct cases (TN, TP) are adjacent at one end,
+#   erroneous cases (FN, FP) are adjacent at the other end,
+#   and No prediction sits in the middle as a neutral separator.
+#
+#   0 = TN  (true negative)   → medium sage green
+#   1 = TP  (true positive)   → vivid bright green
+#   2 = No prediction         → vivid golden yellow (neutral)
+#   3 = FN  (false negative)  → salmon / light red
+#   4 = FP  (false positive)  → strong red
+#
+# Distances: TN↔TP = 1 (both correct), FN↔FP = 1 (both wrong),
+#            TP↔FN = 2 (cross-boundary), TN↔FP = 4 (maximum opposition).
+HEATMAP_CODE_TN          = 0
+HEATMAP_CODE_TP          = 1
+HEATMAP_CODE_NOPRED      = 2
+HEATMAP_CODE_FN          = 3
+HEATMAP_CODE_FP          = 4
+
+HEATMAP_COLOR_TN         = "#74c476"   # medium sage green  – true negative
+HEATMAP_COLOR_TP         = "#238b45"   # vivid bright green – true positive (distinct from COLOR_AMP)
+HEATMAP_COLOR_NOPRED     = "#ffd700"   # vivid golden yellow – no prediction
+HEATMAP_COLOR_FN         = "#fc9272"   # salmon / light red  – false negative
+HEATMAP_COLOR_FP         = "#d73027"   # strong red          – false positive
+
+HEATMAP_CMAP = mcolors.ListedColormap([
+    HEATMAP_COLOR_TN,     # 0 → TN
+    HEATMAP_COLOR_TP,     # 1 → TP
+    HEATMAP_COLOR_NOPRED, # 2 → No prediction
+    HEATMAP_COLOR_FN,     # 3 → FN
+    HEATMAP_COLOR_FP,     # 4 → FP
+])
 
 PROP_CMAPS = ["viridis", "plasma", "coolwarm", "YlOrBr", "PuBu", "RdYlGn", "BrBG", "PuOr"]
 
@@ -283,7 +324,7 @@ print(f"\nTop 10 best-predicted sequences:")
 print(best_predicted.head(10).to_string(index=False))
 
 # ===========================================================================
-# Analysis 0: Balanced accuracy bar chart
+# Analysis 0a: Balanced accuracy bar chart (ordered highest to lowest)
 # ===========================================================================
 
 metrics_sorted = metrics_df.sort_values("Balanced Accuracy", ascending=False)
@@ -327,9 +368,109 @@ for bar, (_, row) in zip(bars, metrics_sorted.iterrows()):
                 "\u2716", ha="center", va="bottom", fontsize=12, color="black")
 
 plt.tight_layout()
-plt.savefig(OUTPUT_ANALYSIS_0_PATH, dpi=150)
+plt.savefig(OUTPUT_ANALYSIS_0A_PATH, dpi=150)
 plt.close()
-print(f"Analysis 0 saved to {OUTPUT_ANALYSIS_0_PATH}")
+print(f"Analysis 0a saved to {OUTPUT_ANALYSIS_0A_PATH}")
+
+# ===========================================================================
+# Analysis 0b: Sensitivity bar chart (ordered highest to lowest)
+# ===========================================================================
+
+metrics_sorted_sens = metrics_df.sort_values("Sensitivity", ascending=False)
+
+fig, ax = plt.subplots(figsize=(12, 7))
+bar_colors_sens = [COLOR_DL if t in DL_TOOLS else COLOR_ML
+                   for t in metrics_sorted_sens["Model"]]
+bars_sens = ax.bar(
+    metrics_sorted_sens["Model"],
+    metrics_sorted_sens["Sensitivity"],
+    color=bar_colors_sens,
+)
+ax.set_xlabel("Tool", fontsize=12)
+ax.set_ylabel("Sensitivity (%)", fontsize=12)
+ax.set_title("Sensitivity by Tool (ordered highest to lowest)", fontsize=14)
+ax.set_ylim([0, 110])
+ax.axhline(50, color="gray", linestyle="--", lw=1)
+
+legend_handles_sens = [
+    mpatches.Patch(color=COLOR_DL, label="Deep Learning (DL)"),
+    mpatches.Patch(color=COLOR_ML, label="Machine Learning (ML)"),
+    mlines.Line2D([], [], color="gray", linestyle="--", lw=1.5,
+                  label="Random classifier (50%)"),
+    mlines.Line2D([], [], color="black", marker="$\u2605$", linestyle="none",
+                  markersize=10, label="Training dataset not available"),
+    mlines.Line2D([], [], color="black", marker="$\u2716$", linestyle="none",
+                  markersize=7, label="Seq. length restrictions (subset only)"),
+]
+ax.legend(handles=legend_handles_sens, fontsize=9)
+plt.xticks(rotation=45, ha="right", fontsize=9)
+
+for bar, (_, row) in zip(bars_sens, metrics_sorted_sens.iterrows()):
+    val  = row["Sensitivity"]
+    tool = row["Model"]
+    ax.text(bar.get_x() + bar.get_width() / 2, val + 0.5,
+            f"{val:.1f}", ha="center", va="bottom", fontsize=7)
+    if tool in UNKNOWN_TRAINING_TOOLS:
+        ax.text(bar.get_x() + bar.get_width() / 2, val + 4.0,
+                "\u2605", ha="center", va="bottom", fontsize=12, color="black")
+    if tool in LENGTH_RESTRICTED_TOOLS:
+        ax.text(bar.get_x() + bar.get_width() / 2, val + 4.0,
+                "\u2716", ha="center", va="bottom", fontsize=12, color="black")
+
+plt.tight_layout()
+plt.savefig(OUTPUT_ANALYSIS_0B_PATH, dpi=150)
+plt.close()
+print(f"Analysis 0b (Sensitivity) saved to {OUTPUT_ANALYSIS_0B_PATH}")
+
+# ===========================================================================
+# Analysis 0c: Specificity bar chart (ordered highest to lowest)
+# ===========================================================================
+
+metrics_sorted_spec = metrics_df.sort_values("Specificity", ascending=False)
+
+fig, ax = plt.subplots(figsize=(12, 7))
+bar_colors_spec = [COLOR_DL if t in DL_TOOLS else COLOR_ML
+                   for t in metrics_sorted_spec["Model"]]
+bars_spec = ax.bar(
+    metrics_sorted_spec["Model"],
+    metrics_sorted_spec["Specificity"],
+    color=bar_colors_spec,
+)
+ax.set_xlabel("Tool", fontsize=12)
+ax.set_ylabel("Specificity (%)", fontsize=12)
+ax.set_title("Specificity by Tool (ordered highest to lowest)", fontsize=14)
+ax.set_ylim([0, 110])
+ax.axhline(50, color="gray", linestyle="--", lw=1)
+
+legend_handles_spec = [
+    mpatches.Patch(color=COLOR_DL, label="Deep Learning (DL)"),
+    mpatches.Patch(color=COLOR_ML, label="Machine Learning (ML)"),
+    mlines.Line2D([], [], color="gray", linestyle="--", lw=1.5,
+                  label="Random classifier (50%)"),
+    mlines.Line2D([], [], color="black", marker="$\u2605$", linestyle="none",
+                  markersize=10, label="Training dataset not available"),
+    mlines.Line2D([], [], color="black", marker="$\u2716$", linestyle="none",
+                  markersize=7, label="Seq. length restrictions (subset only)"),
+]
+ax.legend(handles=legend_handles_spec, fontsize=9)
+plt.xticks(rotation=45, ha="right", fontsize=9)
+
+for bar, (_, row) in zip(bars_spec, metrics_sorted_spec.iterrows()):
+    val  = row["Specificity"]
+    tool = row["Model"]
+    ax.text(bar.get_x() + bar.get_width() / 2, val + 0.5,
+            f"{val:.1f}", ha="center", va="bottom", fontsize=7)
+    if tool in UNKNOWN_TRAINING_TOOLS:
+        ax.text(bar.get_x() + bar.get_width() / 2, val + 4.0,
+                "\u2605", ha="center", va="bottom", fontsize=12, color="black")
+    if tool in LENGTH_RESTRICTED_TOOLS:
+        ax.text(bar.get_x() + bar.get_width() / 2, val + 4.0,
+                "\u2716", ha="center", va="bottom", fontsize=12, color="black")
+
+plt.tight_layout()
+plt.savefig(OUTPUT_ANALYSIS_0C_PATH, dpi=150)
+plt.close()
+print(f"Analysis 0c (Specificity) saved to {OUTPUT_ANALYSIS_0C_PATH}")
 
 # ===========================================================================
 # Analysis 1: Pairwise agreement matrix
@@ -364,6 +505,15 @@ for i in range(n_tools):
     for j in range(i + 1, n_tools):
         arr[i, j] = arr[j, i]
 agreement_sym = pd.DataFrame(arr, index=tool_order, columns=tool_order)
+
+_a1_off_diag = agreement_sym.values.copy()
+np.fill_diagonal(_a1_off_diag, np.nan)
+_a1_per_tool = agreement_sym.apply(lambda r: r[r.index != r.name].mean(), axis=1)
+print(f"\n── Analysis 1: pairwise agreement summary ──────────────────────────")
+print(f"  Overall mean : {np.nanmean(_a1_off_diag):.1f}%")
+print("  Per-tool mean (agreement with all others):")
+for t, v in _a1_per_tool.sort_values(ascending=False).items():
+    print(f"    {t:<22s} {v:.1f}%")
 
 dist_matrix = 100.0 - agreement_sym.fillna(50).values
 np.fill_diagonal(dist_matrix, 0.0)
@@ -425,28 +575,60 @@ plt.close()
 print(f"Analysis 1 saved to {OUTPUT_ANALYSIS_1_PATH}")
 
 # ===========================================================================
-# Analysis 2: Correctness heatmap — clustermap with dendrograms for peptides
-#             and tools (Ward linkage), side columns for true class and
-#             physicochemical properties, legend drawn inside a dedicated axes.
+# Analysis 2: TP/TN/FP/FN/No-prediction heatmap — clustermap with dendrograms
+#             for peptides and tools (Ward linkage), side columns for true class
+#             and physicochemical properties, legend drawn inside a dedicated axes.
+#
+# Cell codes (ordered by semantic distance for clustering):
+#   0 = TN  (true negative)   – correct, adjacent to TP
+#   1 = TP  (true positive)   – correct, adjacent to TN
+#   2 = No prediction         – neutral, sits between correct and erroneous
+#   3 = FN  (false negative)  – error, adjacent to FP
+#   4 = FP  (false positive)  – error, adjacent to FN
 # ===========================================================================
 
-# ── Build per-peptide correctness matrix ─────────────────────────────────
+# ── Build per-peptide TP/TN/FP/FN/NoPred matrix ──────────────────────────
+def _classify_cell(pred_val, true_val):
+    """Return numeric cell code for a single (prediction, ground-truth) pair.
+
+    Codes are ordered by semantic distance for clustering:
+      0 = TN, 1 = TP  (correct, adjacent)
+      2 = No prediction (neutral middle)
+      3 = FN, 4 = FP  (errors, adjacent)
+    """
+    if np.isnan(pred_val):
+        return HEATMAP_CODE_NOPRED
+    pred = int(pred_val)
+    gt   = int(true_val)
+    if pred == 1 and gt == 1:
+        return HEATMAP_CODE_TP
+    elif pred == 0 and gt == 0:
+        return HEATMAP_CODE_TN
+    elif pred == 1 and gt == 0:
+        return HEATMAP_CODE_FP
+    else:  # pred == 0 and gt == 1
+        return HEATMAP_CODE_FN
+
 correctness_data = {}
 for tool_name, (label_col, _) in TOOLS.items():
     if label_col not in eval_df.columns:
         continue
     pred_vals = pd.to_numeric(eval_df[label_col], errors="coerce")
-    correctness_data[tool_name] = np.where(
-        pred_vals.isna(),
-        np.nan,
-        (pred_vals == eval_df["ABP_from_databases"].astype(int)).astype(float),
-    )
+    true_vals = eval_df["ABP_from_databases"].astype(int)
+    codes = np.array([
+        _classify_cell(p, t)
+        for p, t in zip(pred_vals.values, true_vals.values)
+    ], dtype=float)
+    correctness_data[tool_name] = codes
 
 correctness_df = pd.DataFrame(correctness_data, index=eval_df.index)
-correctness_df = correctness_df.dropna(how="all")
+# Drop rows where every tool has no prediction
+correctness_df = correctness_df[~(correctness_df == HEATMAP_CODE_NOPRED).all(axis=1)]
 
 eval_sub = eval_df.loc[correctness_df.index].copy()
-correctness_filled = correctness_df.fillna(0.5)
+# _classify_cell never returns NaN (missing predictions already map to
+# HEATMAP_CODE_NOPRED = 2), so this fillna is a safety no-op.
+correctness_filled = correctness_df.fillna(HEATMAP_CODE_NOPRED)
 
 # ── Hierarchical clustering ───────────────────────────────────────────────
 row_dist  = pdist(correctness_filled.values, metric="euclidean")
@@ -515,7 +697,7 @@ DENDRO_LW = 0.7
 
 # ── Title: drawn inside the top-dendrogram axes row, above the dendrogram ──
 ax_top_dendro.set_title(
-    "Prediction correctness by peptide (rows) and tool (columns)",
+    "Per-peptide prediction outcomes across tools",
     fontsize=18,
     fontweight="bold",
     pad=6,
@@ -551,15 +733,12 @@ ax_left_dendro.set_axis_off()
 ax_left_dendro.invert_yaxis()
 
 # ── Main heatmap ──────────────────────────────────────────────────────────
-cmap_main = mcolors.LinearSegmentedColormap.from_list(
-    "correctness", ["#d73027", "#fee08b", "#1a9850"]
-)
 ax_main.imshow(
     correctness_plot.values,
     aspect="auto",
-    cmap=cmap_main,
-    vmin=0,
-    vmax=1,
+    cmap=HEATMAP_CMAP,
+    vmin=-0.5,
+    vmax=4.5,
     interpolation="none",
 )
 ax_main.set_yticks([])
@@ -635,12 +814,12 @@ ax.set_ylim(0, 1)
 # Gradient block: len(available_props) bars
 # We'll use a simple uniform grid: divide [0,1] into logical rows.
 
-n_swatch_rows = 3 + 2 + 2   # correctness + tool type + ground truth entries
+n_swatch_rows = 5 + 2 + 2   # prediction type (5) + tool type (2) + ground truth (2)
 n_grad_rows   = len(available_props)
 # Approximate row heights in normalised units (will be scaled to fit)
 # We give section headers 1.4x a normal row, gradient bars 1.8x
 unit = 1.0 / (
-    4 * 1.4 +           # 4 section headers (correctness, tool, gt, properties)
+    4 * 1.4 +           # 4 section headers (prediction type, tool, gt, properties)
     n_swatch_rows * 1.0 +
     n_grad_rows * 2.2 +
     5 * 0.4             # inter-block gaps
@@ -723,11 +902,13 @@ def _gradient_entry(ax, y, prop, vmin, vmean, vmax, cmap_name):
 
     return y - h
 
-# ── Block 1: Prediction correctness ──────────────────────────────────────
-y = _section_header(ax, y, "Prediction correctness")
-y = _swatch_entry(ax, y, "#1a9850", "Correct")
-y = _swatch_entry(ax, y, "#fee08b", "No prediction")
-y = _swatch_entry(ax, y, "#d73027", "Incorrect")
+# ── Block 1: Prediction type ──────────────────────────────────────────────
+y = _section_header(ax, y, "Prediction type")
+y = _swatch_entry(ax, y, HEATMAP_COLOR_TN,    "TN – True Negative")
+y = _swatch_entry(ax, y, HEATMAP_COLOR_TP,    "TP – True Positive")
+y = _swatch_entry(ax, y, HEATMAP_COLOR_NOPRED,"No prediction")
+y = _swatch_entry(ax, y, HEATMAP_COLOR_FN,    "FN – False Negative")
+y = _swatch_entry(ax, y, HEATMAP_COLOR_FP,    "FP – False Positive")
 y -= H_GAP
 
 # ── Block 2: Tool type ────────────────────────────────────────────────────
@@ -758,8 +939,17 @@ print(f"Analysis 2 saved to {OUTPUT_ANALYSIS_2_PATH}")
 # Analysis 3a: Spearman correlation
 # ===========================================================================
 
-correctness_df_valid = correctness_df.copy()
-error_rate = correctness_df_valid.apply(
+# Re-derive a binary correct/incorrect mask from the 5-class code matrix.
+# TN (0) and TP (1) → correct (1.0); FN (3) and FP (4) → incorrect (0.0);
+# No prediction (2) → NaN (excluded from error rate).
+correctness_binary = correctness_df.copy().astype(float)
+correctness_binary[correctness_binary == HEATMAP_CODE_TP]     = 1.0   # TP → correct
+correctness_binary[correctness_binary == HEATMAP_CODE_TN]     = 1.0   # TN → correct
+correctness_binary[correctness_binary == HEATMAP_CODE_FP]     = 0.0   # FP → incorrect
+correctness_binary[correctness_binary == HEATMAP_CODE_FN]     = 0.0   # FN → incorrect
+correctness_binary[correctness_binary == HEATMAP_CODE_NOPRED] = np.nan  # no pred → NaN
+
+error_rate = correctness_binary.apply(
     lambda row: 1 - row.dropna().mean() if row.dropna().size > 0 else np.nan,
     axis=1,
 )
@@ -965,7 +1155,7 @@ ax_A.set_ylim([0, 1.02])
 ax_A.text(-0.12, 1.11, "A", transform=ax_A.transAxes, **_PANEL_KW)
 
 # ---------------------------------------------------------------------------
-# Panel B – Analysis 0: balanced accuracy bar chart
+# Panel B – Analysis 0a: balanced accuracy bar chart
 # ---------------------------------------------------------------------------
 ax_B = fig_paper.add_subplot(gs_outer[0, 1])
 
@@ -1062,7 +1252,7 @@ ax_D.barh(corr_df_plot["Property"], corr_df["Spearman rho"], color=colors_bar_D)
 ax_D.axvline(0, color="black", lw=0.8)
 ax_D.set_xlabel("Spearman \u03c1", fontsize=22)
 ax_D.set_title(
-    "Correlation: peptide error rate vs\nphysicochemical properties  (red = p < 0.05)",
+    "Correlation: peptide error rate vs\nphysicochemical properties",
     fontsize=24, fontweight="bold",
 )
 ax_D.tick_params(axis="both", labelsize=19)
@@ -1107,7 +1297,7 @@ ax_E_legend.set_axis_off()
 
 # Panel label E – placed on the left dendrogram row
 ax_E_top_dend.set_title(
-    "Prediction correctness by peptide (rows) and tool (columns)",
+    "Per-peptide prediction outcomes across tools",
     fontsize=24, fontweight="bold", pad=5,
 )
 ax_E_top_dend.text(-0.28, 1.05, "E", transform=ax_E_top_dend.transAxes, **_PANEL_KW)
@@ -1129,12 +1319,10 @@ for coll in ax_E_left_dend.collections:
 ax_E_left_dend.set_axis_off()
 ax_E_left_dend.invert_yaxis()
 
-cmap_main_E = mcolors.LinearSegmentedColormap.from_list(
-    "correctness", ["#d73027", "#fee08b", "#1a9850"]
-)
+cmap_main_E = HEATMAP_CMAP
 ax_E_main.imshow(
     correctness_plot.values, aspect="auto",
-    cmap=cmap_main_E, vmin=0, vmax=1, interpolation="none",
+    cmap=cmap_main_E, vmin=-0.5, vmax=4.5, interpolation="none",
 )
 ax_E_main.set_yticks([])
 ax_E_main.set_xticks(range(len(tools_ordered)))
@@ -1180,10 +1368,12 @@ H_GRAD = H_GRAD * 1.2
 H_GAP  = H_GAP  * 1.2
 
 y = 1.0 - 0.015
-y = _section_header(ax, y, "Prediction correctness")
-y = _swatch_entry(ax, y, "#1a9850", "Correct")
-y = _swatch_entry(ax, y, "#fee08b", "No prediction")
-y = _swatch_entry(ax, y, "#d73027", "Incorrect")
+y = _section_header(ax, y, "Prediction type")
+y = _swatch_entry(ax, y, HEATMAP_COLOR_TN,    "TN – True Negative")
+y = _swatch_entry(ax, y, HEATMAP_COLOR_TP,    "TP – True Positive")
+y = _swatch_entry(ax, y, HEATMAP_COLOR_NOPRED,"No prediction")
+y = _swatch_entry(ax, y, HEATMAP_COLOR_FN,    "FN – False Negative")
+y = _swatch_entry(ax, y, HEATMAP_COLOR_FP,    "FP – False Positive")
 y -= H_GAP
 y = _section_header(ax, y, "Tool type")
 y = _swatch_entry(ax, y, COLOR_DL, "Deep Learning (DL)")

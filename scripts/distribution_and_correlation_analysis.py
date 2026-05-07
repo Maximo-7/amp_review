@@ -222,10 +222,10 @@ plt.close(fig)
 
 
 # ===========================================================================
-# Section: Anomalous sequences from AMPDB
+# Figure 3 – Anomalous sequences from AMPDB
 # ===========================================================================
 
-print("\n=== AMPDB anomalous sequences ===")
+print("\n=== Figure 3: AMPDB anomalous sequences ===")
 
 df_ampdb          = dfs_abps["AMPDB"]
 df_ampdb_anom     = df_ampdb[df_ampdb["Net Charge (pH 7)"] < -5]
@@ -239,11 +239,19 @@ fig, axes = plt.subplots(1, 2, figsize=(12, 4))
 axes = axes.flatten()
 colours_ampdb = ["tomato", "tab:olive"]
 
-for ax, (db_name, df), colour in zip(axes, dfs_ampdb.items(), colours_ampdb):
+for ax, (db_name, df), colour, label in zip(
+    axes, dfs_ampdb.items(), colours_ampdb, ["A", "B"]
+):
     df["Sequence Length"].plot.density(ax=ax, alpha=0.9, color=colour)
     ax.set_xlabel("Number of amino acids")
     ax.set_ylabel("Density")
     ax.set_title(f"Sequence Length {db_name}")
+    ax.text(
+        0.02, 0.98, label,
+        transform=ax.transAxes,
+        fontsize=18, fontweight="bold",
+        va="top", ha="left",
+    )
 
 plt.tight_layout()
 save_figure(fig, "ampdb_anomalous", "ampdb_sequence_length")
@@ -259,10 +267,10 @@ print(f"  Mean sequence length – non-BPI:       {df_ampdb_anom[~bpi_mask]['Seq
 
 
 # ===========================================================================
-# Figure 3 – Density distributions: ABPs vs non-AMPs  (KDE only, no histograms)
+# Figure 4 – Density distributions: ABPs vs non-AMPs  (KDE only, no histograms)
 # ===========================================================================
 
-print("\n=== Figure 3: density distributions ABPs vs non-AMPs ===")
+print("\n=== Figure 4: density distributions ABPs vs non-AMPs ===")
 
 dfs_standard = {"ABPs": df_abps_standard, "non-AMPs": df_non_amps_standard}
 df_reference  = pd.concat([df_abps_standard, df_non_amps_standard], ignore_index=True)
@@ -307,10 +315,10 @@ plt.close(fig)
 
 
 # ===========================================================================
-# Figure 4 – Net charge: ABPs vs non-AMPs  (KDE + histogram)
+# Figure 5 – Net charge: ABPs vs non-AMPs  (KDE + histogram)
 # ===========================================================================
 
-print("\n=== Figure 4: net charge ABPs vs non-AMPs (KDE + histogram) ===")
+print("\n=== Figure 5: net charge ABPs vs non-AMPs (KDE + histogram) ===")
 
 net_charge_limits = (-20, 20)
 
@@ -347,10 +355,10 @@ plt.close(fig)
 
 
 # ===========================================================================
-# Figure 5 – Spearman correlation heatmaps
+# Figure 6 – Spearman correlation heatmaps
 # ===========================================================================
 
-print("\n=== Figure 5: correlation heatmaps ===")
+print("\n=== Figure 6: correlation heatmaps ===")
 
 df_abps_prop     = df_abps_standard[PROPERTIES]
 df_non_amps_prop = df_non_amps_standard[PROPERTIES]
@@ -403,10 +411,10 @@ plt.close(fig)
 
 
 # ===========================================================================
-# Figure 6 – UpSet plot of standard ABPs from databases
+# Figure 7 – UpSet plot of standard ABPs from databases
 # ===========================================================================
 
-print("\n=== Figure 6: UpSet plot ===")
+print("\n=== Figure 7: UpSet plot ===")
 
 df_upset = complete_dataset[
     complete_dataset["ABP_from_databases"] &
