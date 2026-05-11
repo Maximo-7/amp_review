@@ -159,7 +159,7 @@ for prop in dynamic_props_db:
 fig, axes = plt.subplots(4, 2, figsize=(12, 16))
 axes = axes.flatten()
 
-for ax, prop, xlabel in zip(axes, PROPERTIES, XLABELS):
+for i, (ax, prop, xlabel) in enumerate(zip(axes, PROPERTIES, XLABELS)):
     for db_name, df in dfs_abps.items():
         df[prop].plot.density(ax=ax, label=db_name, alpha=0.7)
 
@@ -175,6 +175,12 @@ for ax, prop, xlabel in zip(axes, PROPERTIES, XLABELS):
         ax.set_xlim(prop_limits_db[prop])
 
     ax.legend()
+    ax.text(
+        0.06 if i < 2 else 0.02, 0.98, chr(65 + i),
+        transform=ax.transAxes,
+        fontsize=18, fontweight="bold",
+        va="top", ha="left",
+    )
 
 plt.tight_layout()
 save_figure(fig, "distributions_per_database", "distributions_per_database")
@@ -193,7 +199,7 @@ fig, axes = plt.subplots(3, 2, figsize=(12, 12))
 axes = axes.flatten()
 colours_db = ["tab:blue", "tab:orange", "tab:green", "tab:red", "tab:purple"]
 
-for ax, (db_name, df), colour in zip(axes, dfs_abps.items(), colours_db):
+for i, (ax, (db_name, df), colour) in enumerate(zip(axes, dfs_abps.items(), colours_db)):
     df["Net Charge (pH 7)"].plot.density(ax=ax, alpha=0.9, color=colour)
 
     bins = np.arange(
@@ -215,6 +221,12 @@ for ax, (db_name, df), colour in zip(axes, dfs_abps.items(), colours_db):
     ax.set_ylabel("Density")
     ax.set_title(f"Net Charge (pH 7) {db_name}")
     ax.set_xlim(net_charge_limits)
+    ax.text(
+        0.02, 0.98, chr(65 + i),
+        transform=ax.transAxes,
+        fontsize=18, fontweight="bold",
+        va="top", ha="left",
+    )
 
 plt.tight_layout()
 save_figure(fig, "net_charge_per_database", "net_charge_per_database")
@@ -287,7 +299,7 @@ for prop in dynamic_props_std:
 fig, axes = plt.subplots(4, 2, figsize=(12, 16))
 axes = axes.flatten()
 
-for ax, prop, xlabel in zip(axes, PROPERTIES, XLABELS):
+for i, (ax, prop, xlabel) in enumerate(zip(axes, PROPERTIES, XLABELS)):
     data_abp     = dfs_standard["ABPs"][prop].dropna()
     data_non_amp = dfs_standard["non-AMPs"][prop].dropna()
     ks_stat, p_value = ks_2samp(data_abp, data_non_amp)
@@ -308,6 +320,12 @@ for ax, prop, xlabel in zip(axes, PROPERTIES, XLABELS):
         ax.set_xlim(prop_limits_std[prop])
 
     ax.legend()
+    ax.text(
+        0.06 if i < 2 else 0.02, 0.98, chr(65 + i),
+        transform=ax.transAxes,
+        fontsize=18, fontweight="bold",
+        va="top", ha="left",
+    )
 
 plt.tight_layout()
 save_figure(fig, "distributions_abps_vs_non_amps", "distributions_abps_vs_non_amps")
@@ -326,7 +344,7 @@ fig, axes = plt.subplots(1, 2, figsize=(12, 4))
 axes = axes.flatten()
 colours_std = ["tab:blue", "tab:orange"]
 
-for ax, (label, df), colour in zip(axes, dfs_standard.items(), colours_std):
+for i, (ax, (label, df), colour) in enumerate(zip(axes, dfs_standard.items(), colours_std)):
     df["Net Charge (pH 7)"].plot.density(ax=ax, alpha=0.9, color=colour)
 
     bins = np.arange(
@@ -348,6 +366,12 @@ for ax, (label, df), colour in zip(axes, dfs_standard.items(), colours_std):
     ax.set_ylabel("Density")
     ax.set_title(f"Net Charge (pH 7) {label}")
     ax.set_xlim(net_charge_limits)
+    ax.text(
+        0.02, 0.98, chr(65 + i),
+        transform=ax.transAxes,
+        fontsize=18, fontweight="bold",
+        va="top", ha="left",
+    )
 
 plt.tight_layout()
 save_figure(fig, "net_charge_abps_vs_non_amps", "net_charge_abps_vs_non_amps")
@@ -394,12 +418,18 @@ sns.heatmap(
     **heatmap_kwargs,
 )
 
-for ax, title in zip(axes, ["ABPs", "non-AMPs"]):
+for i, (ax, title) in enumerate(zip(axes, ["ABPs", "non-AMPs"])):
     ax.set_title(title, fontsize=13, fontweight="semibold", pad=10)
     ax.tick_params(axis="x", rotation=45, labelsize=9)
     ax.tick_params(axis="y", rotation=0,  labelsize=9)
     ax.set_xlabel("")
     ax.set_ylabel("")
+    ax.text(
+        -0.06, 1.02, chr(65 + i),
+        transform=ax.transAxes,
+        fontsize=18, fontweight="bold",
+        va="bottom", ha="left",
+    )
 
 fig.suptitle(
     "Spearman correlation of physicochemical properties",
