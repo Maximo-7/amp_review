@@ -5,6 +5,10 @@ Analyses the distribution of physicochemical properties of ABPs and their
 correlation across and against non-AMPs, and produces an UpSet plot for the
 database overlap of standard ABPs.
 
+Also performs a detailed Bactericidal Permeability-Increasing protein (BPI)
+incidence analysis within AMPDB, motivated by the pressence of anomalous
+negatively charged peptides, and extends it to the other AMP databases.
+
 Expected project layout (paths relative to project root):
     data/processed/complete_dataset.csv  -- output of annotate_dataset.py
 
@@ -269,13 +273,317 @@ plt.tight_layout()
 save_figure(fig, "ampdb_anomalous", "ampdb_sequence_length")
 plt.close(fig)
 
-bpi_mask = df_ampdb_anom["AMPDB_name"].str.startswith(
-    "Bactericidal permeability-increasing protein (BPI)"
+# ---------------------------------------------------------------------------
+# BPI incidence analysis
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Step 1 – Retrieve canonical BPI sequences from UniProt via UniProt API
+#
+# Strategy: query UniProt (all entries, no reviewed filter) for entries whose
+# recommended protein name is exactly "Bactericidal permeability-increasing
+# protein".  The returned sequences form the ground-truth BPI reference set,
+# which is then used to annotate ALL five databases via exact sequence
+# matching — including the three databases (APD, dbAMP, DRAMP) that carry no
+# name field.
+# ---------------------------------------------------------------------------
+
+import re
+import time
+import requests
+
+_UNIPROT_SEARCH = "https://rest.uniprot.org/uniprotkb/search"
+_SEQ_LEN_MIN = 5
+_SEQ_LEN_MAX = 255
+
+# Exact protein name query: field "protein_name" in all UniProt entries
+# (no reviewed:true filter).  Wrapping in quotes enforces phrase matching
+# in the UniProt query language.
+_BPI_QUERY = (
+    'protein_name:"Bactericidal permeability-increasing protein" '
+    f"AND length:[{_SEQ_LEN_MIN} TO {_SEQ_LEN_MAX}]"
 )
-print(f"  Number of sequences annotated as BPI: {bpi_mask.sum()}")
-print(f"  Number of anomalous sequences:        {len(df_ampdb_anom)}")
-print(f"  Mean sequence length – BPI class:     {df_ampdb_anom[bpi_mask]['Sequence Length'].mean():.1f}")
-print(f"  Mean sequence length – non-BPI:       {df_ampdb_anom[~bpi_mask]['Sequence Length'].mean():.1f}")
+
+def _fetch_uniprot_bpi_sequences(retries: int = 3, pause: float = 2.0) -> set[str]:
+    """
+    Query UniProt (all entries, no reviewed filter) for entries whose
+    recommended protein name is exactly 'Bactericidal permeability-increasing
+    protein' and return their sequences as a set of strings.
+
+    Only sequences with length in [_SEQ_LEN_MIN, _SEQ_LEN_MAX] are retained,
+    matching the length range of the dataset.
+
+    Uses UniProt REST pagination (link-header cursor) to handle any result size.
+    Falls back to an empty set after *retries* consecutive failures so that the
+    rest of the script can still run (with a warning).
+    """
+    params = {
+        "query":  _BPI_QUERY,
+        "format": "json",
+        "fields": "sequence,protein_name",
+        "size":   500,
+    }
+    sequences: set[str] = set()
+    url: str | None = _UNIPROT_SEARCH
+
+    while url:
+        for attempt in range(1, retries + 1):
+            try:
+                resp = requests.get(url, params=params if url == _UNIPROT_SEARCH else None,
+                                    timeout=30)
+                resp.raise_for_status()
+                break
+            except requests.RequestException as exc:
+                print(f"    [UniProt] attempt {attempt}/{retries} failed: {exc}")
+                if attempt < retries:
+                    time.sleep(pause)
+        else:
+            print("  WARNING: could not reach UniProt after all retries. "
+                  "BPI UniProt set will be empty.")
+            return sequences
+
+        data = resp.json()
+        for entry in data.get("results", []):
+            seq = entry.get("sequence", {}).get("value", "")
+            if seq:
+                sequences.add(seq.upper())
+
+        # Follow Link: <url>; rel="next" pagination header
+        link_header = resp.headers.get("Link", "")
+        match = re.search(r'<([^>]+)>;\s*rel="next"', link_header)
+        url = match.group(1) if match else None
+        params = None  # pagination URL already contains all query params
+
+    return sequences
+
+print("\n  Fetching canonical BPI sequences from UniProt …")
+uniprot_bpi_seqs: set[str] = _fetch_uniprot_bpi_sequences()
+print(f"  UniProt BPI sequences retrieved (length {_SEQ_LEN_MIN}–{_SEQ_LEN_MAX} aa): {len(uniprot_bpi_seqs)}")
+
+# ---------------------------------------------------------------------------
+# Step 2 – Annotate AMPDB subsets using UniProt BPI sequences
+#
+# For AMPDB (which has a name column) we use TWO complementary masks:
+#   a) sequence-based  – exact match against the UniProt BPI set
+#   b) name-based      – substring against the canonical name, since
+#                         these names also contain information on the
+#                         source organism
+#
+# We report both and take their union as the definitive BPI mask.
+# ---------------------------------------------------------------------------
+
+_BPI_CANONICAL = "Bactericidal permeability-increasing protein"
+
+def _name_bpi_mask(series: pd.Series) -> pd.Series:
+    """
+    Return a boolean mask that is True when the name field contains the
+    canonical BPI name as a substring (case-insensitive).  Using contains
+    rather than exact equality accommodates entries whose stored name appends
+    extra context (e.g. organism suffix, accession) while still excluding
+    clearly unrelated proteins.
+    """
+    return series.str.contains(_BPI_CANONICAL, case=False, na=False)
+
+def _seq_bpi_mask(df: pd.DataFrame) -> pd.Series:
+    """Return True for rows whose sequence is in the UniProt BPI set."""
+    return df["Sequence"].str.upper().isin(uniprot_bpi_seqs)
+
+# AMPDB anomalous subset
+bpi_name_mask_anom = _name_bpi_mask(df_ampdb_anom["AMPDB_name"])
+bpi_seq_mask_anom  = _seq_bpi_mask(df_ampdb_anom)
+bpi_mask_anom      = bpi_name_mask_anom | bpi_seq_mask_anom          # union
+
+# AMPDB non-anomalous subset
+bpi_name_mask_non_anom = _name_bpi_mask(df_ampdb_non_anom["AMPDB_name"])
+bpi_seq_mask_non_anom  = _seq_bpi_mask(df_ampdb_non_anom)
+bpi_mask_non_anom      = bpi_name_mask_non_anom | bpi_seq_mask_non_anom  # union
+
+# Subsets
+df_bpi_anom         = df_ampdb_anom[bpi_mask_anom]
+df_non_bpi_anom     = df_ampdb_anom[~bpi_mask_anom]
+df_bpi_non_anom     = df_ampdb_non_anom[bpi_mask_non_anom]
+df_non_bpi_non_anom = df_ampdb_non_anom[~bpi_mask_non_anom]
+
+# How many name-inferred BPI sequences across the full 
+# AMPDB set are also present in the UniProt BPI reference set?
+bpi_name_mask_all     = _name_bpi_mask(df_ampdb["AMPDB_name"])
+bpi_seq_mask_all = _seq_bpi_mask(df_ampdb)
+bpi_name_and_seq_mask_all = bpi_name_mask_all & bpi_seq_mask_all
+n_name_also_in_uniprot = bpi_name_and_seq_mask_all.sum()
+n_name_total = bpi_name_mask_all.sum()
+
+# How many new peptides includes the UniProt BPI reference set
+# to the name-inferred BPI sequences in AMPDB?
+
+n_new_uniprot_all = (bpi_seq_mask_all & ~bpi_name_mask_all).sum()
+
+# ---------------------------------------------------------------------------
+# Step 4 – Cross-database BPI annotation via exact sequence matching
+#
+# All five databases (AMPDB, APD, dbAMP, DRAMP, DBAASP) are assessed by
+# checking whether each sequence is present in the UniProt BPI set.
+# This is the only reliable method for APD, dbAMP, and DRAMP, which have
+# no name field in the dataset.
+# ---------------------------------------------------------------------------
+
+other_dbs = ["APD", "dbAMP", "DRAMP", "DBAASP"]
+df_dbaasp  = dfs_abps["DBAASP"]
+
+# All AMPDB BPI sequences (anomalous ∪ non-anomalous), for cross-db lookup
+bpi_mask_all      = bpi_name_mask_all | bpi_seq_mask_all
+bpi_seqs_all      = set(df_ampdb[bpi_mask_all]["Sequence"])
+
+db_intersections: dict[str, int] = {}
+for db in other_dbs:
+    db_seqs = set(dfs_abps[db]["Sequence"])
+    db_intersections[db] = len(bpi_seqs_all & db_seqs)
+
+# Cross-reference: how many sequences in each db match UniProt BPI directly
+db_uniprot_hits: dict[str, int] = {}
+for db in amp_databases:
+    db_seqs = dfs_abps[db]["Sequence"]
+    db_uniprot_hits[db] = int(db_seqs.isin(uniprot_bpi_seqs).sum())
+
+# ---------------------------------------------------------------------------
+# Step 5 – DBAASP independent name-based study (complementary
+# comparison; uses broad mask to enumerate BPI-related names)
+# ---------------------------------------------------------------------------
+
+dbaasp_broad_mask = (
+    df_dbaasp["DBAASP_name"].str.contains(
+        _BPI_CANONICAL, case=False, na=False
+    ) |
+    df_dbaasp["DBAASP_name"].str.contains("BPI", case=True, na=False)
+)
+df_dbaasp_bpi_list = df_dbaasp[dbaasp_broad_mask]["DBAASP_name"].value_counts()
+
+# ---------------------------------------------------------------------------
+# Print organised report
+# ---------------------------------------------------------------------------
+
+print("\n" + "=" * 70)
+print("  BPI INCIDENCE REPORT")
+print("=" * 70)
+
+# --- Table 1: BPI counts within AMPDB anomalous / non-anomalous subsets ---
+header1 = (
+    f"{'Subset':<22} {'Total':>7} {'Mean len':>9} {'BPI':>7} {'non-BPI':>9} "
+    f"{'BPI %':>8} {'Mean len BPI':>14} {'Mean len non-BPI':>17}"
+)
+sep1 = "-" * len(header1)
+
+print(
+    f"\nTable 1 – BPI incidence within AMPDB charge-based subsets\n"
+    f"  Detection: name substring match OR UniProt sequence match (union)\n"
+    f"  Name match: '{_BPI_CANONICAL}' as substring (case-insensitive)\n"
+    f"  Sequence match: against {len(uniprot_bpi_seqs)} UniProt BPI sequences "
+    f"(length {_SEQ_LEN_MIN}–{_SEQ_LEN_MAX} aa)\n"
+    f"  Name-inferred BPI sequences in AMPDB also found in UniProt set: "
+    f"{n_name_also_in_uniprot} / {n_name_total}\n"
+    f"  UniProt-determined BPI sequences in AMPDB not name-inferred: "
+    f"{n_new_uniprot_all}"
+)
+print(sep1)
+print(header1)
+print(sep1)
+
+for subset_label, df_sub, bpi_mask_sub in [
+    ("AMPDB (Charge < -5)",  df_ampdb_anom,     bpi_mask_anom),
+    ("AMPDB (Charge ≥ -5)",  df_ampdb_non_anom, bpi_mask_non_anom),
+]:
+    n_total   = len(df_sub)
+    n_bpi     = int(bpi_mask_sub.sum())
+    n_non_bpi = n_total - n_bpi
+    pct_bpi   = 100 * n_bpi / n_total if n_total > 0 else float("nan")
+
+    mean_len = df_sub["Sequence Length"].mean()
+    mean_len_bpi = (
+        df_sub[bpi_mask_sub]["Sequence Length"].mean()
+        if n_bpi > 0 else float("nan")
+    )
+    mean_len_non_bpi = (
+        df_sub[~bpi_mask_sub]["Sequence Length"].mean()
+        if n_non_bpi > 0 else float("nan")
+    )
+
+    print(
+        f"{subset_label:<22} {n_total:>7} {mean_len:>9.1f} {n_bpi:>7} {n_non_bpi:>9} "
+        f"{pct_bpi:>7.1f}% {mean_len_bpi:>14.1f} {mean_len_non_bpi:>17.1f}"
+    )
+
+print(sep1)
+
+# --- Table 2a: Cross-database intersection for all AMPDB BPI sequences ------
+n_bpi_all = len(bpi_seqs_all)
+
+header2 = f"{'Database':<10} {'Shared seqs':>12} {'% of BPI (all)':>15}"
+sep2    = "-" * len(header2)
+
+print(f"\nTable 2a – Presence of all AMPDB BPI sequences in other databases")
+print(f"  (Base: {n_bpi_all} BPI sequences across the full AMPDB subset)")
+print(f"  Overlap determined by exact sequence match.")
+print(sep2)
+print(header2)
+print(sep2)
+
+for db, n_shared in db_intersections.items():
+    pct = 100 * n_shared / n_bpi_all if n_bpi_all > 0 else float("nan")
+    print(f"{db:<10} {n_shared:>12} {pct:>14.1f}%")
+
+print(sep2)
+
+# --- Table 2b: UniProt-direct BPI hits in each database (sequence match) ---
+n_uniprot_bpi = len(uniprot_bpi_seqs)
+
+header2b = (
+    f"{'Database':<18} {'UniProt BPI hits':>20} "
+    f"{'% of UniProt BPI set':>23}"
+)
+sep2b = "-" * len(header2b)
+
+print(
+    f"\nTable 2b – BPI sequences (by direct UniProt exact-sequence match) "
+    f"in each database"
+)
+print(
+    f"  UniProt BPI reference set: {n_uniprot_bpi} sequence(s)\n"
+    f"  Query: protein_name:\"{_BPI_CANONICAL}\"\n"
+    f"  This covers APD, dbAMP and DRAMP, which have no name annotation."
+)
+print(sep2b)
+print(header2b)
+print(sep2b)
+
+for db, n_hits in db_uniprot_hits.items():
+    pct = 100 * n_hits / n_uniprot_bpi if n_uniprot_bpi > 0 else float("nan")
+    print(f"{db:<10} {n_hits:>19} {pct:>22.1f}%")
+
+print(sep2b)
+
+# --- Table 3: DBAASP independent BPI name study ----------------------------
+n_dbaasp_broad = int(dbaasp_broad_mask.sum())
+
+print(f"\nTable 3 – BPI-related entries in DBAASP (name-based, all DBAASP sequences)")
+print(f"  Listed: names containing '{_BPI_CANONICAL}' (case-insensitive) or 'BPI' (case-sensitive)")
+print(f"  Counted as BPI: names containing '{_BPI_CANONICAL}' only")
+
+col1_w  = max(len(n) for n in df_dbaasp_bpi_list.index) + 2
+header3 = f"{'DBAASP_name':<{col1_w}} {'Count':>7}"
+sep3    = "-" * len(header3)
+print(sep3)
+print(header3)
+print(sep3)
+for name, count in df_dbaasp_bpi_list.items():
+    print(f"{name:<{col1_w}} {count:>7}")
+print(sep3)
+print(f"  Total BPI-related entries: {n_dbaasp_broad}")
+print(
+    "  None of these correspond to the full BPI protein; all are either\n"
+    "  peptide fragments derived from BPI, BPI-related family members\n"
+    "  (e.g. BPIFA2, BPI fold-containing), or LBP/BPI peptides.\n"
+    "  DBAASP therefore contains no BPI entries in the strict sense."
+)
+print("=" * 70)
 
 
 # ===========================================================================
