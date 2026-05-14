@@ -1,6 +1,6 @@
 # Raw Data — Download Instructions
 
-This directory contains the raw sequence data used to build the evaluation dataset for the AMP prediction tool benchmark.
+This directory contains the raw sequence data used to build the datasets for the AMP prediction tool benchmark.
 All files were downloaded on **April 26, 2026**.
 
 ```
@@ -88,11 +88,11 @@ Files are stored in `data/raw/abps/`. Only sequences with documented antibacteri
 
 ---
 
-## 2. Tool Training Datasets
+## 2. Tool Datasets
 
 Files are stored in `data/raw/tools/`. These are the training (and, where available, test) datasets published alongside each reviewed tool. They are used to:
 
-- Check for **data leakage** between the training data and the evaluation set (see `notebooks/testing_data_leakage.ipynb`).
+- Check for **data leakage** between the training data and the evaluation set (see `scripts/testing_data_leakage.ipynb`).
 - **Exclude training sequences** from the evaluation dataset to ensure a fair benchmark (see `scripts/build_base_dataset.py`).
 
 Beyond leakage checking and sequence exclusion, the datasets in `data/raw/tools/` are also used directly as training input by the Nextflow workflows that wrap the model training processes (`train_amp_bert.nf`, `train_lmpred.nf`, `train_kt_amppred.nf`, `train_plapd.nf`). Those scripts are included for reproducibility but are not necessary for the evaluation pipeline. They read the directory via the `tools_dir` parameter in `nextflow.config` (`tools_dir = 'data/raw/tools'`).
@@ -106,12 +106,12 @@ The following tools are covered in the benchmark. The table lists data availabil
 | AMP Scanner | Veltri et al. (2018) | Yes | Yes | `amp_scanner/` | Yes |
 | AmPEP | Bhadra et al. (2018) | Yes | No | `ampep/` | No — leakage check only |
 | Macrel | Santos-Júnior et al. (2020) | Yes | No | `macrel/` | Yes |
-| amPEPpy (length/count balanced model) | Lawrence et al. (2021) | Yes | Yes | `ampeppy/` | Yes |
+| amPEPpy (length/count balanced model) | Lawrence et al. (2021) | Yes | None (internal OOB) | `ampeppy/` | Yes |
 | LMPred (T5 UniRef50-based model) | Dee (2022) | Yes | Yes | `lmpred/` | Yes |
 | AMPlify | Li et al. (2022) | Yes | Yes | `amplify/` | Yes |
 | AMPpred-EL | Lv et al. (2022) | No | No | — | No |
 | Ma et al. (2022) | Ma et al. (2022) | No | Yes | `ma_et_al/` | Yes |
-| CAMPR4 prediction server | Gawde et al. (2023) | No | No | — | Yes |
+| CAMP<sub>R4</sub> prediction server | Gawde et al. (2023) | No | No | — | Yes |
 | AMP-BERT | Lee et al. (2023) | Yes | Yes | `amp_bert/` | Yes |
 | AMPFinder (stage 1 classifier) | Yang et al. (2023) | Yes | Yes | `ampfinder/` | Yes |
 | GEU-AMP50 | Panwar et al. (2023) | No | No | — | No |
@@ -123,7 +123,7 @@ The following tools are covered in the benchmark. The table lists data availabil
 | Bhangu et al. (2025) | Bhangu et al. (2025) | No | No | — | No |
 | KT-AMPpred (AMP Fine-tuned Model) | Liang et al. (2025) | Yes | Yes | `kt_amppred/` | Yes |
 | MSCMamba | He et al. (2025) | No | No | — | No |
-| PLAPD | Zhang et al. (2025) | Yes | Yes | `plapd/` | Yes |
+| PLAPD | Zhang et al. (2025) | Yes | No | `plapd/` | Yes |
 | DLFea4AMPGen (ABP-MPB model) | Gao et al. (2025) | Yes | Yes | `dlfea4ampgen/` | Yes |
 | AMP-CapsNet | Ghulam et al. (2026) | No | No | — | No |
 | MultiAMP (sequence-only model) | Li et al. (2026) | Yes | Yes | `multiamp/` | Yes |
@@ -443,9 +443,9 @@ data/raw/tools/ma_et_al/
 └── Non-AMPs.fa
 ```
 
-### 2.9 CAMPR4 prediction server
+### 2.9 CAMP<sub>R4</sub> prediction server
 
-CAMPR4 does not provide any of the datasets used to train or test its models (ANN, RF, and SVM). No files are downloaded for this tool.
+CAMP<sub>R4</sub> does not provide any of the datasets used to train or test its models (ANN, RF, and SVM). No files are downloaded for this tool.
 
 ### 2.10 AMP-BERT
 
