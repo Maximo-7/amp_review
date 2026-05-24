@@ -15,12 +15,12 @@ To address this gap, our work focuses exclusively on antibacterial peptides (ABP
 1. [Repository Structure](#repository-structure)
 2. [Requirements](#requirements)
 3. [Getting Started](#getting-started)
-4. [Dataset Acquisition](#dataset-acquisition-reproducibility-only--can-be-skipped) *(reproducibility only, can be skipped)*
+4. [Dataset Acquisition](#dataset-acquisition) *(reproducibility only — can be skipped)*
    - [1. Antibacterial Peptide (ABP) Sequences](#1-antibacterial-peptide-abp-sequences)
    - [2. Tool Datasets](#2-tool-datasets)
    - [3. Non-AMP Sequences from UniProt](#3-non-amp-sequences-from-uniprot)
    - [4. Sequence Counts After Preprocessing](#4-sequence-counts-after-preprocessing)
-5. [Model Acquisition](#model-acquisition-reproducibility-only--can-be-skipped) *(reproducibility only, can be skipped)*
+5. [Model Acquisition](#model-acquisition) *(reproducibility only — can be skipped)*
    - [Downloaded models](#downloaded-models)
    - [Trained models](#trained-models)
 6. [Reproducing the Pipeline](#reproducing-the-pipeline)
@@ -120,7 +120,7 @@ docker build -f docker/<tool_dir>/Dockerfile -t <tag> .
 
 ---
 
-## Dataset Acquisition *(reproducibility only, can be skipped)*
+## Dataset Acquisition
 
 The raw sequence data in `data/raw/` is already included in this repository. This section documents where each file was originally obtained and how to re-download it, for end-to-end reproducibility. All files were downloaded on **April 26, 2026**.
 
@@ -968,7 +968,7 @@ The table below summarises entry counts at each stage. Note that future download
 | UniProt reviewed (Swiss-Prot) | 17,637 | 16,191 | 16,191 |
 | UniProt unreviewed (TrEMBL) | 743,594 | 656,985 | 656,985 |
 
-## Model Acquisition *(reproducibility only, can be skipped)*
+## Model Acquisition
 
 Unlike the raw data in `data/raw/`, model files are **not included** in this repository. They are bundled directly inside the Docker images used by the evaluation pipeline, so no manual model setup is required to run `main.nf`. This section documents how to obtain each model file for end-to-end reproducibility when rebuilding Docker images from scratch. You can skip ahead to [Reproducing the Pipeline](#reproducing-the-pipeline) if you do not need to rebuild the images.
 
