@@ -15,12 +15,12 @@ To address this gap, our work focuses exclusively on antibacterial peptides (ABP
 1. [Repository Structure](#repository-structure)
 2. [Requirements](#requirements)
 3. [Getting Started](#getting-started)
-4. [Dataset Acquisition](#dataset-acquisition) *(reproducibility only — can be skipped)*
+4. [Dataset Acquisition](#dataset-acquisition) *(reproducibility only, can be skipped)*
    - [1. Antibacterial Peptide (ABP) Sequences](#1-antibacterial-peptide-abp-sequences)
    - [2. Tool Datasets](#2-tool-datasets)
    - [3. Non-AMP Sequences from UniProt](#3-non-amp-sequences-from-uniprot)
    - [4. Sequence Counts After Preprocessing](#4-sequence-counts-after-preprocessing)
-5. [Model Acquisition](#model-acquisition) *(reproducibility only — can be skipped)*
+5. [Model Acquisition](#model-acquisition) *(reproducibility only, can be skipped)*
    - [Downloaded models](#downloaded-models)
    - [Trained models](#trained-models)
 6. [Reproducing the Pipeline](#reproducing-the-pipeline)
