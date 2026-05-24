@@ -15,11 +15,12 @@ To address this gap, our work focuses exclusively on antibacterial peptides (ABP
 1. [Repository Structure](#repository-structure)
 2. [Requirements](#requirements)
 3. [Getting Started](#getting-started)
-4. [Dataset Acquisition](#dataset-acquisition) *(reproducibility only — can be skipped)*
-   - [Antibacterial Peptide Sequences](#1-antibacterial-peptide-abp-sequences)
-   - [Tool Datasets](#2-tool-datasets)
-   - [Non-AMP Sequences from UniProt](#3-non-amp-sequences-from-uniprot)
-5. [Model Acquisition](#model-acquisition) *(reproducibility only — can be skipped)*
+4. [Dataset Acquisition](#dataset-acquisition-reproducibility-only--can-be-skipped) *(reproducibility only, can be skipped)*
+   - [1. Antibacterial Peptide (ABP) Sequences](#1-antibacterial-peptide-abp-sequences)
+   - [2. Tool Datasets](#2-tool-datasets)
+   - [3. Non-AMP Sequences from UniProt](#3-non-amp-sequences-from-uniprot)
+   - [4. Sequence Counts After Preprocessing](#4-sequence-counts-after-preprocessing)
+5. [Model Acquisition](#model-acquisition-reproducibility-only--can-be-skipped) *(reproducibility only, can be skipped)*
    - [Downloaded models](#downloaded-models)
    - [Trained models](#trained-models)
 6. [Reproducing the Pipeline](#reproducing-the-pipeline)
@@ -119,7 +120,7 @@ docker build -f docker/<tool_dir>/Dockerfile -t <tag> .
 
 ---
 
-## Dataset Acquisition *(reproducibility only — can be skipped)*
+## Dataset Acquisition *(reproducibility only, can be skipped)*
 
 The raw sequence data in `data/raw/` is already included in this repository. This section documents where each file was originally obtained and how to re-download it, for end-to-end reproducibility. All files were downloaded on **April 26, 2026**.
 
@@ -266,7 +267,7 @@ The following tools are **not** handled by the script and must be set up manuall
 
 iAMP-2L (Xiao et al., 2013) does not distribute its sequences as FASTA files; they are embedded in two PDF supplementary documents. Both PDFs are saved to `data/raw/tools/iamp_2l/raw/` and their text content is extracted manually before parsing.
 
-> **Note on data provenance:** The Macrel repository suggests downloading two files named `Supp-S1.pdf` and `Supp-S2.pdf` directly from `http://www.jci-bioinfo.cn/iAMP/` —presumably old versions of iAMP-2L datasets— but that host is no longer reachable (`Name or service not known`). The supplementary files are now available through the journal publisher (Elsevier) at the URLs below. Note also that the current supplementary files appear to differ from the original dataset reported in the paper, with discrepant sequence counts.
+> **Note on data provenance:** The Macrel repository suggests downloading two files named `Supp-S1.pdf` and `Supp-S2.pdf` directly from `http://www.jci-bioinfo.cn/iAMP/`, presumably old versions of iAMP-2L datasets, but that host is no longer reachable (`Name or service not known`). The supplementary files are now available through the journal publisher (Elsevier) at the URLs below. Note also that the current supplementary files appear to differ from the original dataset reported in the paper, with discrepant sequence counts.
 
 **Benchmark dataset (training + test split) — Supporting Information S1**
 
@@ -312,7 +313,7 @@ processed/
 AMP Scanner v2 (Veltri et al., 2018) distributes its original training and test splits directly in the repository. Files are stored in `data/raw/tools/amp_scanner/`.
 
 - **URL:** https://github.com/dan-veltri/amp-scanner-v2/tree/main/original-dataset
-- **Steps:** Download all files from that folder, preserving their original names. The repository also contains a `README.md` describing the dataset — keep it alongside the sequence files as useful provenance.
+- **Steps:** Download all files from that folder, preserving their original names. The repository also contains a `README.md` describing the dataset, keep it alongside the sequence files for reference.
 
 <details>
 <summary>Optional: download via command line</summary>
@@ -729,7 +730,7 @@ data/raw/tools/agramp/
 
 #### 2.15 PepNet
 
-PepNet (Han et al., 2024) distributes its datasets through Zenodo, which assigns a persistent DOI to each record — a better practice for reproducibility than GitHub, where content can be altered or removed without notice. Files are stored in `data/raw/tools/pepnet/`.
+PepNet (Han et al., 2024) distributes its datasets through Zenodo, which assigns a persistent DOI to each record; a better practice for reproducibility than GitHub, where content can be altered or removed without notice. Files are stored in `data/raw/tools/pepnet/`.
 
 - **URL:** https://zenodo.org/records/13223516
 - **Steps:** Download `datasets.tar.gz` from the record and extract it. The archive contains a `datasets/` folder with three subfolders (`AMP/`, `AIP/`, `Toxic/`) and a `properties.pkl` file, all of which are extracted directly inside `data/raw/tools/pepnet/`.
@@ -863,7 +864,7 @@ data/raw/tools/dlfea4ampgen/
 
 #### 2.19 MultiAMP
 
-MultiAMP (Li et al., 2026) distributes its dataset through Hugging Face, which — like Zenodo — uses persistent identifiers. Files are stored in `data/raw/tools/multiamp/`.
+MultiAMP (Li et al., 2026) distributes its dataset through Hugging Face, which, like Zenodo, uses persistent identifiers. Files are stored in `data/raw/tools/multiamp/`.
 
 - **URL:** https://huggingface.co/jiayi11/multi_amp/blob/main/data.tar.gz
 - **Steps:** Download `data.tar.gz` and extract it. The archive contains three folders (`structure/`, `test_amp/`, and `train_amp/`), which will be extracted directly inside `data/raw/tools/multiamp/`. The `structure/` folder is not used in the evaluation pipeline or leakage tests and is not included in the repository.
@@ -915,7 +916,7 @@ NOT (keyword:KW-0078) NOT (keyword:KW-0081) NOT (keyword:KW-0425)
 | KW-0878 | Amphibian defense peptide |
 | KW-0929 | Antimicrobial |
 | KW-0930 | Antiviral protein |
-| KW-0964 | Secreted *(included — positive filter)* |
+| KW-0964 | Secreted *(included, positive filter)* |
 
 #### 3.1 Reviewed sequences (Swiss-Prot)
 
@@ -967,7 +968,7 @@ The table below summarises entry counts at each stage. Note that future download
 | UniProt reviewed (Swiss-Prot) | 17,637 | 16,191 | 16,191 |
 | UniProt unreviewed (TrEMBL) | 743,594 | 656,985 | 656,985 |
 
-## Model Acquisition *(reproducibility only — can be skipped)*
+## Model Acquisition *(reproducibility only, can be skipped)*
 
 Unlike the raw data in `data/raw/`, model files are **not included** in this repository. They are bundled directly inside the Docker images used by the evaluation pipeline, so no manual model setup is required to run `main.nf`. This section documents how to obtain each model file for end-to-end reproducibility when rebuilding Docker images from scratch. You can skip ahead to [Reproducing the Pipeline](#reproducing-the-pipeline) if you do not need to rebuild the images.
 
