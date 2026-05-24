@@ -5,12 +5,11 @@
 # Work directory (intermediate files)
 work/
 
-# Results (generated data, not code)
+# Results (generated data)
 results/
 
 # Models (usually heavy files)
 models/*
-!models/README.md
 data/raw/tools/pepnet/*/checkpoints/
 data/raw/tools/pepnet/*/feature/
 

@@ -1,251 +1,1413 @@
 # AMP Benchmark Pipeline
 
-A reproducible Nextflow pipeline for the systematic evaluation of antimicrobial peptide (AMP) prediction tools.
+This repository hosts the datasets and code to reproduce a Nextflow pipeline for the systematic evaluation of antimicrobial peptide (AMP) prediction tools assessed in our review [1].
 
-> **Note:** This is a preliminary release. The README will be expanded to fully document the benchmark process once the associated paper is submitted. Additional documentation is available in `data/raw/` and `models/`.
+## Introduction
 
-## Overview
+Antimicrobial resistance is one of the most pressing global health challenges, responsible for approximately 4.7 million deaths associated with resistant pathogens in 2019 alone. AMPs are short amino acid sequences found across a wide range of organisms. They have emerged as a promising source of novel treatments against highly resistant bacteria. However, classical AMP discovery is complex, time-consuming, and resource-intensive. Computational tools based on machine learning (ML) and deep learning (DL) have been developed to accelerate this process, but the lack of a common benchmark dataset makes direct comparison between tools difficult.
 
-TODO: brief description of the review, motivation and scope.
+To address this gap, our work focuses exclusively on antibacterial peptides (ABPs) and introduces a comprehensive benchmark built on an integrated dataset compiled from the current AMP database ecosystem, enabling a systematic and reproducible evaluation of existing predictive tools.
 
-## Repository structure
+---
+
+## Table of Contents
+
+1. [Repository Structure](#repository-structure)
+2. [Requirements](#requirements)
+3. [Getting Started](#getting-started)
+4. [Dataset Acquisition](#dataset-acquisition) *(reproducibility only — can be skipped)*
+   - [Antibacterial Peptide Sequences](#1-antibacterial-peptide-abp-sequences)
+   - [Tool Datasets](#2-tool-datasets)
+   - [Non-AMP Sequences from UniProt](#3-non-amp-sequences-from-uniprot)
+5. [Model Acquisition](#model-acquisition) *(reproducibility only — can be skipped)*
+   - [Downloaded models](#downloaded-models)
+   - [Trained models](#trained-models)
+6. [Reproducing the Pipeline](#reproducing-the-pipeline)
+   - [Step 1 — Build the dataset](#step-1--build-the-dataset)
+   - [Step 2 — Run tool predictions](#step-2--run-tool-predictions)
+   - [Step 3 — Annotate with tool predictions and physicochemical properties](#step-3--annotate-with-tool-predictions-and-physicochemical-properties)
+   - [Step 4 — Generate figures and tables](#step-4--generate-figures-and-tables)
+7. [References](#references)
+
+---
+
+## Repository Structure
 
 ```
 amp_review/
-├── main.nf                          # Pipeline entry point
-├── nextflow.config                  # Process resources, Docker profiles and parameters
-├── modules/                         # One Nextflow module per tool (and per step)
-│   ├── amp_scanner.nf
-│   ├── macrel.nf
-│   ├── ampeppy.nf
-│   ├── amplify.nf
-│   ├── lmpred_embeddings.nf
-│   ├── lmpred_training.nf
-│   ├── lmpred.nf
-│   ├── ma_et_al_format.nf
-│   ├── ma_et_al_attention.nf
-│   ├── ma_et_al_lstm.nf
-│   ├── ma_et_al_bert.nf
-│   ├── ma_et_al_combine.nf
-│   ├── amp_bert_training.nf
-│   ├── amp_bert.nf
-│   ├── ampfinder.nf
-│   ├── pyampa.nf
-│   ├── pepnet_embeddings.nf
-│   └── pepnet.nf
-├── docker/                          # Dockerfiles for tools requiring custom images
-│   ├── ampeppy/
-│   ├── macrel/
-│   ├── lmpred/
-│   │   ├── Dockerfile
-│   │   ├── lmpred_create_embeddings.py
-│   │   ├── lmpred_train.py
-│   │   └── lmpred_predict.py
-│   ├── ma_et_al_att_lstm/
-│   │   ├── Dockerfile
-│   │   ├── run_attention.py
-│   │   ├── run_lstm.py
-│   │   └── parse_results.py
-│   ├── ma_et_al_bert/
-│   │   ├── Dockerfile
-│   │   └── run_bert.py
-│   ├── amp_bert/
-│   │   ├── Dockerfile
-│   │   └── amp_bert_predict.py
-│   ├── ampfinder/
-│   │   ├── Dockerfile
-│   │   └── run_cli_maximo.py
-│   ├── pyampa/
-│   │   └── Dockerfile
-│   └── pepnet/
-│       ├── Dockerfile
-│       └── prott5_embedder.py
-├── tools/                           # Git submodules (tool source code)
-│   ├── amPEPpy/
-│   └── c_AMPs-prediction/
-├── models/                          # Model files not tracked by git (see models/README.md)
-│   ├── amp_bert/
-│   ├── ampfinder/
-│   ├── lmpred/
-│   ├── ma_et_al/
-│   ├── pepnet/
-│   ├── prot_t5_xl_half_uniref50-enc/
-│   ├── pyampa/
-│   └── README.md
 ├── data/
-│   ├── raw/
-│   │   ├── ABP_bases/               # AMP database FASTA files
-│   │   ├── nonAMP_UniProt/          # UniProt reviewed and unreviewed sequences
-│   │   └── tools/                   # Training datasets for tools without submodule
-│   ├── interim/                     # Intermediate files (not tracked by git)
-│   │   ├── complete_dataset.csv
-│   │   ├── complete_dataset.fasta
-│   │   └── complete_dataset_annotated.csv
-│   └── processed/
-│       └── evaluation_dataset/      # Evaluation dataset and derived files
-│           ├── evaluation_dataset.csv
-│           ├── evaluation_dataset.fasta
-│           ├── evaluation_dataset_geq_10aa.fasta
-│           ├── x_test_maximo.csv
-│           ├── x_test_maximo_wo_length.csv
-│           └── y_test_maximo.csv
-├── scripts/                         # General-purpose Python scripts
-│   ├── build_dataset.py             # Builds complete and evaluation datasets
-│   ├── analyze_amps_csv_new.py      # Physicochemical annotation
-│   ├── merge_predictions.py         # Merges all predictions into complete_dataset_final.csv
-│   └── evaluation_results.py        # Computes metrics and generates analysis plots
-├── notebooks/
-│   └── data_leakage_check.ipynb     # Data leakage analysis
-└── results/                         # Generated by the pipeline (not tracked by git)
-    ├── tools_predictions/           # Raw predictions per tool
-    └── evaluation/                  # Metrics, plots and analysis outputs
+│   ├── interim/                   # Intermediate files (build_base_dataset.py output)
+│   ├── processed/                 # Final evaluation and complete dataset
+│   └── raw/
+│       ├── abps/                  # ABP FASTA files from AMP databases
+│       ├── non_amps/              # Non-AMP sequences from UniProt
+│       └── tools/                 # Training/test sets of the evaluated tools
+├── docker/                        # Dockerfiles and scripts for each tool
+│   ├── amp_bert/
+│   ├── ampeppy/
+│   ├── ampfinder/
+│   ├── amplify/
+│   ├── dlfea4ampgen/
+│   ├── kt_amppred/
+│   ├── lmpred/
+│   ├── ma_et_al_att_lstm/
+│   ├── ma_et_al_bert/
+│   ├── macrel/
+│   ├── multiamp/
+│   ├── pepnet/
+│   ├── plapd/
+│   └── pyampa/
+├── models/                        # NOT INCLUDED: model files utilized to build the Docker images
+├── modules/                       # Nextflow modules for both trainings and predictions
+├── scripts/                       # Python/shell scripts for dataset building and analysis
+├── results/                       # NOT INCLUDED: results generated by Nextflow and analysis scripts
+│   ├── evaluation/                # Metrics, plots, and tables
+│   ├── models/                    # Model outputs from training workflows
+│   ├── sequences_analysis/        # Physicochemical distribution figures
+│   └── tools_predictions/         # Per-tool raw prediction files
+├── main.nf                        # Main evaluation pipeline
+├── train_amp_bert.nf              # Optional: AMP-BERT training workflow
+├── train_kt_amppred.nf            # Optional: KT-AMPpred training workflow
+├── train_lmpred.nf                # Optional: LMPred training workflow
+├── train_plapd.nf                 # Optional: PLAPD training workflow
+└── nextflow.config                # Pipeline configuration
 ```
 
-## Tools evaluated
+---
 
-| Tool | Reference | Docker image | Notes |
-|------|-----------|--------------|-------|
-| AMP Scanner v2 | Veltri et al. (2018) | `dveltri/ascan2:orig` | Official image. Requires sequences ≥ 10 aa |
-| Macrel | Santos-Júnior et al. (2020) | `alvaromaximo/macrel:1.0` | `--keep-negatives` required |
-| amPEPpy | Lawrence et al. (2021) | `alvaromaximo/ampeppy:1.0` | |
-| LMPred | Dee & Bhatt (2022) | `alvaromaximo/lmpred:1.0` | Requires training (model provided) |
-| AMPlify | Li et al. (2022) | `alvaromaximo/amplify:1.0` | |
-| Ma et al. (2022) | Ma et al. (2022) | `alvaromaximo/ma_et_al_att_lstm:1.0`, `alvaromaximo/ma_et_al_bert:1.0` | Three-model consensus (ATT + LSTM + BERT). Runs on CPU |
-| CAMPR4 (ANN, RF, SVM) | TODO | Web server only | Manual step required — see below |
-| AMP-BERT | TODO | `alvaromaximo/amp_bert:1.0` | Requires training (model provided) |
-| AMPFinder | TODO | `alvaromaximo/ampfinder:1.0` | AMP identification model only |
-| PyAMPA | TODO | `alvaromaximo/pyampa:1.0` | AMPValidate model adapted for raw peptides |
-| AGRAMP | TODO | Web server only | Manual step required — see below |
-| PepNet | TODO | `alvaromaximo/pepnet:1.0` | Standard mode with ProtT5 embeddings |
-| KT-AMPpred | TODO | `alvaromaximo/kt_amppred:1.0` | |
-| PLAPD | TODO | `alvaromaximo/plapd:1.0` | |
-| DLFea4AMPGen | TODO | `alvaromaximo/dlfea4ampgen:1.0` | ABP-MPB model. Runs on CPU (MindSpore) |
-| MultiAMP | TODO | `alvaromaximo/multiamp:1.0` | |
+## Requirements
 
-## Prerequisites
+The project was developed on **Ubuntu Linux** using **Nextflow v25.10.4**. Installation instructions for Nextflow are available at https://docs.seqera.io/nextflow/install. **Docker** is also required; all pipeline images are pulled automatically by Nextflow at runtime from https://hub.docker.com/repositories/alvaromaximo (and https://hub.docker.com/r/dveltri/ascan2 for the AMP Scanner image).
 
-- [Nextflow](https://www.nextflow.io/) ≥ 25.x
-- [Docker](https://www.docker.com/) or [Podman](https://podman.io/)
-- NVIDIA GPU with CUDA 11.8+ for GPU-accelerated tools (LMPred, AMP-BERT, PepNet)
-- Model files in `models/` — see [`models/README.md`](models/README.md)
+Standalone scripts in `scripts/` require a dedicated conda environment (see [Getting Started](#getting-started)).
 
-## Setup
+Some processes were run using two **NVIDIA RTX 4090 GPUs** (24 GB VRAM each). A GPU is necessary for the optional training workflows (`train_amp_bert.nf`, `train_kt_amppred.nf`, `train_lmpred.nf`, `train_plapd.nf`) and for some prediction steps of `main.nf`.
 
-### 1. Clone the repository
+By default, the pipeline assigns processes across two GPUs (`device=0` and `device=1` in `nextflow.config`). If only **one GPU** is available, replace all instances of `label 'gpu1'` with `label 'gpu0'` in the relevant `.nf` files. If you encounter VRAM or other hardware limitations, the number of concurrent processes can be reduced by adding the following to `nextflow.config`:
+
+```groovy
+executor.queueSize = <n_of_processes>
+```
+
+For details on Nextflow configuration options, see the [Nextflow configuration docs](https://docs.seqera.io/nextflow/config).
+
+---
+
+## Getting Started
+
+Clone the repository first:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/amp_review.git
+git clone https://github.com/Maximo-7/amp_review.git
 cd amp_review
-git submodule update --init --recursive
 ```
 
-### 2. Download required models
-
-See [`models/README.md`](models/README.md) for download instructions for each model.
-
-#### Training times
-
-| Tool | Model | Training duration | CPU hours |
-|------|-------|-------------------------|-----------|
-| AMP-BERT | Fine-tuned ProtBERT-BFD | ~ 39 min | ~ 0.65 |
-| KT-AMPpred | AMP Fine-tuned Model | ~ 4 h | ~ 4.0 |
-| PLAPD | PLAPD model (ESM2-based) | ~ 28 min | ~ 0.5 |
-| LMPred | T5 UniRef50 | ~37 min | ~0.6 |
-
-### 3. Build the evaluation dataset
-
-The evaluation dataset must be built before running the pipeline.
-This step requires the raw AMP database files and UniProt sequences in `data/raw/`.
+To reproduce the conda environment required by the analysis scripts in `scripts/`:
 
 ```bash
-python scripts/build_dataset.py \
-    --abp_bases_dir data/raw/ABP_bases \
-    --uniprot_dir   data/raw/nonAMP_UniProt \
-    --tools_dir     tools \
-    --interim_dir   data/interim \
-    --processed_dir data/processed/evaluation_dataset
+conda env create -f environment.yaml
+conda activate amp_review
 ```
 
-### 4. Annotate physicochemical properties
+All scripts in this repository are designed to be run from the root of the repository (`amp_review/`), unless stated otherwise. If you need to rebuild a Docker image from scratch, run the following from the root:
 
 ```bash
-python scripts/analyze_amps_csv_new.py \
-    -i data/interim/complete_dataset.fasta \
-    -o data/interim/complete_dataset_annotated.csv
+docker build -f docker/<tool_dir>/Dockerfile -t <tag> .
 ```
 
-## Manual steps (web-only tools)
+> **Note:** If you only want to run the evaluation pipeline on the pre-built dataset, skipping raw data acquisition and model training, you can jump directly to [Reproducing the Pipeline](#reproducing-the-pipeline).
 
-Two tools do not provide downloadable code and must be run manually before
-executing the pipeline.
+---
 
-### CAMPR4
+## Dataset Acquisition *(reproducibility only — can be skipped)*
 
-1. Go to https://camp.bicnirrh.res.in/predict/
-2. Upload `data/processed/evaluation_dataset/evaluation_dataset.fasta`
-3. Select dataset: **Natural**; select models: **RF**, **SVM**, **ANN**
-4. Download results and place them in:
-   - `results/tools_predictions/campr4/results_ann.tsv`
-   - `results/tools_predictions/campr4/results_rf.tsv`
-   - `results/tools_predictions/campr4/results_svm.tsv`
+The raw sequence data in `data/raw/` is already included in this repository. This section documents where each file was originally obtained and how to re-download it, for end-to-end reproducibility. All files were downloaded on **April 26, 2026**.
 
-### AGRAMP
+```
+data/raw/
+├── abps/          # Antibacterial peptide sequences from AMP databases
+├── non_amps/      # Non-AMP sequences from UniProt
+└── tools/         # Training/test datasets from the evaluated tools (when available)
+```
 
-1. Go to http://omics.gmu.edu/agramp
-2. TODO: add instructions
+---
 
-## Running the pipeline
+### 1. Antibacterial Peptide (ABP) Sequences
+
+Files are stored in `data/raw/abps/`. Only sequences with documented antibacterial activity (active against Gram-positive and/or Gram-negative bacteria) are downloaded from each database.
+
+#### 1.1 APD — Antimicrobial Peptide Database
+
+- **URL:** https://aps.unmc.edu/database
+- **Steps:**
+  1. On the search page, check the options **Anti-Gram+ bacteria** and **Anti-Gram− bacteria** for the activity filter (only these two).
+  2. Click **Search** at the bottom of the page.
+  3. Scroll to the bottom of the results page and click **"<u>Click here</u> to download FASTA file"**.
+- **Downloaded file:** `results.fasta`
+- **Rename to:** `apd.fasta`
+- **Downloaded entries:** 5,496
+
+#### 1.2 DRAMP — Data Repository of Antimicrobial Peptides
+
+- **URL:** http://dramp.cpu-bioinfor.org/downloads/
+- **Steps:**
+  1. Locate the table that classifies datasets by **Activity**.
+  2. In the **Fasta** column, click **Antibacterial.fasta**.
+- **Downloaded file:** `Antibacterial_amps.fasta`
+- **Rename to:** `dramp.fasta`
+- **Downloaded entries:** 4,159
+
+#### 1.3 dbAMP
+
+- **URL:** https://ycclab.cuhk.edu.cn/dbAMP/download2024.php
+- **Steps:**
+  1. Find the **Download Functional Activity Data** table.
+  2. Locate the row where **NAME** = `Antibacterial`.
+  3. Click the cloud/download icon in the **ACTION** column to download the FASTA file.
+- **Downloaded file:** `dbAMP_Antibacterial_2024.fasta`
+- **Rename to:** `dbamp.fasta`
+- **Downloaded entries:** 7,625
+
+#### 1.4 DBAASP — Database of Antimicrobial Activity and Structure of Peptides
+
+- **URL:** https://dbaasp.org/search
+- **Steps:**
+  1. In the left-hand filter panel, scroll down and find **Targets** → **Target Group (Multi select)**.
+  2. Select **Gram+** from the dropdown, then also select **Gram−** (both should appear as tags in the selector).
+  3. Click the **Search** button at the bottom of the left panel.
+  4. Once results load, click **Export Data** (top right).
+  5. In the export panel, select a segment from the **"Please select segment to download"** dropdown, complete the **reCAPTCHA**, and click **Export FASTA Data**. Repeat for every segment in order. Each segment downloads as a separate file (`peptides-fasta.txt`, `peptides-fasta (1).txt`, …, `peptides-fasta (N).txt`).
+- **Downloaded files:** one `peptides-fasta*.txt` per segment (11 files in this dataset, for segments **"0 – 2000"** through **"20000 – 21583"**); the number of segments may vary in future downloads.
+- **Concatenate and rename:**
+  ```bash
+  cat "peptides-fasta.txt" \
+      "peptides-fasta (1).txt" \
+      "peptides-fasta (2).txt" \
+      "peptides-fasta (3).txt" \
+      "peptides-fasta (4).txt" \
+      "peptides-fasta (5).txt" \
+      "peptides-fasta (6).txt" \
+      "peptides-fasta (7).txt" \
+      "peptides-fasta (8).txt" \
+      "peptides-fasta (9).txt" \
+      "peptides-fasta (10).txt" > dbaasp.fasta
+  ```
+  Adjust the list if the number of segments differs in a future download.
+- **Downloaded entries:** 20,980
+
+#### 1.5 AMPDB — Anti-microbial Peptide Database
+
+- **URL:** https://bblserver.org.in/ampdb/ampdb-downloads
+- **Steps:**
+  1. Locate the rows where the **Dataset** column reads **Anti-gram-negative Dataset** and **Anti-gram-positive Dataset**.
+  2. For each row, click the **FASTA** link under its **Download format** column.
+- **Downloaded files:**
+  - `Anti-gram-negative dataset.fasta` → rename to `ampdb_agn.fasta`
+  - `Anti-gram-positive dataset.fasta` → rename to `ampdb_agp.fasta`
+- **Downloaded entries:** 5,800 anti-Gram-negative and 2,238 anti-Gram-positive; 6,446 distinct IDs.
+
+---
+
+### 2. Tool Datasets
+
+Files are stored in `data/raw/tools/`. These are the training (and, where available, test) datasets published alongside each reviewed tool. They are used to:
+
+- Check for **data leakage** between the training data and the evaluation set (see `scripts/testing_data_leakage.ipynb`).
+- **Exclude training sequences** from the evaluation dataset to ensure a fair benchmark (see `scripts/build_base_dataset.py`).
+
+Beyond leakage checking and sequence exclusion, the datasets in `data/raw/tools/` are also used directly as training input by the Nextflow workflows that wrap the model training processes (`train_amp_bert.nf`, `train_lmpred.nf`, `train_kt_amppred.nf`, `train_plapd.nf`). Those scripts are included for reproducibility but are not necessary for the evaluation pipeline; see [Trained models](#trained-models) for details. They read the directory via the `tools_dir` parameter in `nextflow.config` (`tools_dir = 'data/raw/tools'`).
+
+The following tools are covered in the benchmark. The table lists data availability and whether a `data/raw/tools/` subdirectory is present in this repository. Tools without any available data, or for which no data download was needed, do not have a subdirectory.
+
+| Tool | Reference | Training data available | Test data available | `data/raw/tools/` directory | Evaluated |
+|------|-----------|:-----------------------:|:-------------------:|:------------------:|-----------|
+| iAMP-2L | Xiao et al. (2013) | Yes¹ | Yes¹ | `iamp_2l/` | No — leakage check only |
+| iAMPpred | Meher et al. (2017) | No | No | — | No |
+| AMP Scanner | Veltri et al. (2018) | Yes | Yes | `amp_scanner/` | Yes |
+| AmPEP | Bhadra et al. (2018) | Yes | No | `ampep/` | No — leakage check only |
+| Macrel | Santos-Júnior et al. (2020) | Yes | No | `macrel/` | Yes |
+| amPEPpy (length/count balanced model) | Lawrence et al. (2021) | Yes | None (internal OOB) | `ampeppy/` | Yes |
+| LMPred (T5 UniRef50-based model) | Dee (2022) | Yes | Yes | `lmpred/` | Yes |
+| AMPlify | Li et al. (2022) | Yes | Yes | `amplify/` | Yes |
+| AMPpred-EL | Lv et al. (2022) | No | No | — | No |
+| Ma et al. (2022) | Ma et al. (2022) | No | Yes | `ma_et_al/` | Yes |
+| CAMP<sub>R4</sub> prediction server | Gawde et al. (2023) | No | No | — | Yes |
+| AMP-BERT | Lee et al. (2023) | Yes | Yes | `amp_bert/` | Yes |
+| AMPFinder (stage 1 classifier) | Yang et al. (2023) | Yes | Yes | `ampfinder/` | Yes |
+| GEU-AMP50 | Panwar et al. (2023) | No | No | — | No |
+| AMP-GSM | Söylemez et al. (2023) | No | No | — | No |
+| AMP-RNNpro | Shaon et al. (2024) | Yes | Yes | `amp_rnnpro/` | No — leakage check only |
+| PyAMPA (AMPValidate) | Ramos-Llorens et al. (2024) | No² | No | — | Yes |
+| AGRAMP (3-gram 9-letter model) | Shao et al. (2024) | Yes | Yes | `agramp/` | Yes |
+| PepNet | Han et al. (2024) | Yes | Yes | `pepnet/` | Yes |
+| Bhangu et al. (2025) | Bhangu et al. (2025) | No | No | — | No |
+| KT-AMPpred (AMP Fine-tuned Model) | Liang et al. (2025) | Yes | Yes | `kt_amppred/` | Yes |
+| MSCMamba | He et al. (2025) | No | No | — | No |
+| PLAPD | Zhang et al. (2025) | Yes | No | `plapd/` | Yes |
+| DLFea4AMPGen (ABP-MPB model) | Gao et al. (2025) | Yes | Yes | `dlfea4ampgen/` | Yes |
+| AMP-CapsNet | Ghulam et al. (2026) | No | No | — | No |
+| MultiAMP (sequence-only model) | Li et al. (2026) | Yes | Yes | `multiamp/` | Yes |
+
+¹ iAMP-2L provides training and test sequences embedded in PDF supplementary files. Discrepancies were found between the dataset described in the paper and the supplementary file contents.  
+² PyAMPA was trained on the AMPlify dataset (retrievable from `amplify/`), but does not provide its own data files.
+
+For tools whose datasets can be downloaded automatically, a convenience script is provided:
 
 ```bash
-# Local run with Docker
+bash scripts/download_tools_datasets.sh
+```
+
+The following tools are **not** handled by the script and must be set up manually using the instructions in their respective subsections:
+
+- **iAMP-2L** (§ 2.1) — requires manual PDF text extraction.
+- **AGRAMP** (§ 2.14) — requires manual right-click download from the dataset server.
+
+#### 2.1 iAMP-2L
+
+iAMP-2L (Xiao et al., 2013) does not distribute its sequences as FASTA files; they are embedded in two PDF supplementary documents. Both PDFs are saved to `data/raw/tools/iamp_2l/raw/` and their text content is extracted manually before parsing.
+
+> **Note on data provenance:** The Macrel repository suggests downloading two files named `Supp-S1.pdf` and `Supp-S2.pdf` directly from `http://www.jci-bioinfo.cn/iAMP/` —presumably old versions of iAMP-2L datasets— but that host is no longer reachable (`Name or service not known`). The supplementary files are now available through the journal publisher (Elsevier) at the URLs below. Note also that the current supplementary files appear to differ from the original dataset reported in the paper, with discrepant sequence counts.
+
+**Benchmark dataset (training + test split) — Supporting Information S1**
+
+- **URL:** https://ars.els-cdn.com/content/image/1-s2.0-S0003269713000390-mmc1.pdf
+- **Save as:** `data/raw/tools/iamp_2l/raw/Supp-S1.pdf`
+- **Steps:**
+  1. Open the PDF.
+  2. Select all text (Ctrl + A) and paste it into a plain-text file.
+  3. Save as `data/raw/tools/iamp_2l/raw/train.txt`.
+
+**Independent test dataset — Supporting Information S3**
+
+- **URL:** https://ars.els-cdn.com/content/image/1-s2.0-S0003269713000390-mmc3.pdf
+- **Save as:** `data/raw/tools/iamp_2l/raw/Supp-S3.pdf`
+- **Steps:**
+  1. Open the PDF.
+  2. Select all text (Ctrl + A) and paste it into a plain-text file.
+  3. Save as `data/raw/tools/iamp_2l/raw/test.txt`.
+
+**Parsing**
+
+Once both `.txt` files are in place, run the parsing script from inside the `data/raw/tools/iamp_2l/` directory:
+
+```bash
+python parse_iamp2l.py \
+    --train  raw/train.txt  \
+    --test   raw/test.txt   \
+    --outdir processed/
+```
+
+The script produces four FASTA files in `processed/`:
+
+```
+processed/
+├── AMP_train.fasta
+├── nonAMP_train.fasta
+├── AMP_test.fasta
+└── nonAMP_test.fasta
+```
+
+#### 2.2 AMP Scanner
+
+AMP Scanner v2 (Veltri et al., 2018) distributes its original training and test splits directly in the repository. Files are stored in `data/raw/tools/amp_scanner/`.
+
+- **URL:** https://github.com/dan-veltri/amp-scanner-v2/tree/main/original-dataset
+- **Steps:** Download all files from that folder, preserving their original names. The repository also contains a `README.md` describing the dataset — keep it alongside the sequence files as useful provenance.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+A blobless sparse checkout fetches only the files in the target subfolder at the pinned commit:
+
+```bash
+git clone --no-checkout --filter=blob:none \
+    https://github.com/dan-veltri/amp-scanner-v2.git /tmp/amp-scanner-v2
+cd /tmp/amp-scanner-v2
+git sparse-checkout set original-dataset
+git checkout 933052e2365631fe93098892120ee535e0ba381a
+mkdir -p data/raw/tools/amp_scanner/
+cp original-dataset/* data/raw/tools/amp_scanner/
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+data/raw/tools/amp_scanner/
+├── AMP.eval.fa
+├── AMP.te.fa
+├── AMP.tr.fa
+├── DECOY.eval.fa
+├── DECOY.te.fa
+├── DECOY.tr.fa
+└── README.md
+```
+
+#### 2.3 AmPEP
+
+AmPEP (Bhadra et al., 2018) distributes its training sequences as two ZIP archives at the root of the repository. Files are stored in `data/raw/tools/ampep/`.
+
+- **URL:** https://github.com/ShirleyWISiu/AmPEP
+- **Files:** `M_model_train_AMP_sequence.zip`, `M_model_train_nonAMP_sequence.zip`
+- **Steps:** Download both ZIP files, unzip them, and remove the archives.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+git clone --no-checkout --filter=blob:none \
+    https://github.com/ShirleyWISiu/AmPEP.git /tmp/AmPEP
+cd /tmp/AmPEP
+git checkout 066e9c42dfebf9e08d67295b5a15493218ee194d -- \
+    M_model_train_AMP_sequence.zip \
+    M_model_train_nonAMP_sequence.zip
+mkdir -p data/raw/tools/ampep/
+cp M_model_train_AMP_sequence.zip M_model_train_nonAMP_sequence.zip data/raw/tools/ampep/
+cd data/raw/tools/ampep/
+unzip M_model_train_AMP_sequence.zip
+unzip M_model_train_nonAMP_sequence.zip
+rm M_model_train_AMP_sequence.zip M_model_train_nonAMP_sequence.zip
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+data/raw/tools/ampep/
+├── M_model_train_AMP_sequence.fasta
+└── M_model_train_nonAMP_sequence.fasta
+```
+
+#### 2.4 Macrel
+
+Macrel (Santos-Júnior et al., 2020) builds its training dataset from two sources: the AmPEP training sequences (reused from `data/raw/tools/ampep/`) and hemolytic peptide data from the HemoPI-1 database. Files are stored in `data/raw/tools/macrel/`.
+
+**AmPEP sequences**
+
+Copy the FASTA files from the AmPEP folder (§ 2.3):
+
+```bash
+cp data/raw/tools/ampep/M_model_train_AMP_sequence.fasta data/raw/tools/macrel/
+cp data/raw/tools/ampep/M_model_train_nonAMP_sequence.fasta data/raw/tools/macrel/
+```
+
+**HemoPI-1 sequences**
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+cd data/raw/tools/macrel/
+wget -O hemo.training.pos.faa 'https://webs.iiitd.edu.in/raghava/hemopi/data/HemoPI_1_dataset/main/pos.fa'
+wget -O hemo.training.neg.faa 'https://webs.iiitd.edu.in/raghava/hemopi/data/HemoPI_1_dataset/main/neg.fa'
+wget -O hemo.validation.pos.faa 'https://webs.iiitd.edu.in/raghava/hemopi/data/HemoPI_1_dataset/validation/pos.fa'
+wget -O hemo.validation.neg.faa 'https://webs.iiitd.edu.in/raghava/hemopi/data/HemoPI_1_dataset/validation/neg.fa'
+```
+
+</details>
+
+**Preprocessing**
+
+Once all source files are in place, run `build-AMP-training.py` from inside `data/raw/tools/macrel/` to produce the normalised training dataset. The script requires the Macrel conda environment:
+
+```bash
+conda create --name env_macrel -c bioconda macrel
+conda activate env_macrel
+python build-AMP-training.py
+gunzip preproc/AMP.train.tsv.gz
+```
+
+The resulting directory should look like:
+
+```
+data/raw/tools/macrel/
+├── M_model_train_AMP_sequence.fasta
+├── M_model_train_nonAMP_sequence.fasta
+├── hemo.training.pos.faa
+├── hemo.training.neg.faa
+├── hemo.validation.pos.faa
+├── hemo.validation.neg.faa
+└── preproc/
+    ├── AMP_NAMP.train.faa
+    └── AMP.train.tsv
+```
+
+#### 2.5 amPEPpy
+
+amPEPpy (Lawrence et al., 2021) provides its training data in the `training_data/` folder of the repository. Only two files are needed for leakage testing and the evaluation pipeline. Files are stored in `data/raw/tools/ampeppy/`.
+
+- **URL:** https://github.com/tlawrence3/amPEPpy/tree/master/training_data
+- **Files:** `M_model_train_AMP_sequence.numbered.fasta`, `M_model_train_nonAMP_sequence.numbered.proplen.subsample.fasta`
+- **Steps:** Download those two files, preserving their original names.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+git clone --no-checkout --filter=blob:none \
+    https://github.com/tlawrence3/amPEPpy.git /tmp/amPEPpy
+cd /tmp/amPEPpy
+git checkout 85aab3428b328d9fe4744052258746d8f4ba7bf6 -- \
+    training_data/M_model_train_AMP_sequence.numbered.fasta \
+    training_data/M_model_train_nonAMP_sequence.numbered.proplen.subsample.fasta
+mkdir -p data/raw/tools/ampeppy/
+cp training_data/M_model_train_AMP_sequence.numbered.fasta \
+   training_data/M_model_train_nonAMP_sequence.numbered.proplen.subsample.fasta \
+   data/raw/tools/ampeppy/
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+data/raw/tools/ampeppy/
+├── M_model_train_AMP_sequence.numbered.fasta
+└── M_model_train_nonAMP_sequence.numbered.proplen.subsample.fasta
+```
+
+#### 2.6 LMPred
+
+LMPred (Dee, 2022) distributes its dataset directly in the repository. Files are stored in `data/raw/tools/lmpred/`.
+
+- **URL:** https://github.com/williamdee1/LMPred_AMP_Prediction/tree/main/LM_Pred_Dataset
+- **Steps:** Download all files from that folder, preserving their original names.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+git clone --no-checkout --filter=blob:none \
+    https://github.com/williamdee1/LMPred_AMP_Prediction.git /tmp/LMPred
+cd /tmp/LMPred
+git sparse-checkout set LM_Pred_Dataset
+git checkout 30c7188ea5bf8e699eebfbb08cd1ae9aef1094e9
+mkdir -p data/raw/tools/lmpred/
+cp LM_Pred_Dataset/* data/raw/tools/lmpred/
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+data/raw/tools/lmpred/
+├── X_test.csv
+├── X_train.csv
+├── X_val.csv
+├── y_test.csv
+├── y_train.csv
+├── y_val.csv
+└── README.md
+```
+
+#### 2.7 AMPlify
+
+AMPlify (Li et al., 2022) distributes its training and test data in the `data/` folder of the repository. The imbalanced non-AMP files are not used in this benchmark. Files are stored in `data/raw/tools/amplify/`.
+
+- **URL:** https://github.com/BirolLab/AMPlify/tree/master/data
+- **Files:** `AMPlify_AMP_train_common.fa`, `AMPlify_AMP_test_common.fa`, `AMPlify_non_AMP_train_balanced.fa`, `AMPlify_non_AMP_test_balanced.fa`
+- **Steps:** Download those four files, preserving their original names.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+git clone --no-checkout --filter=blob:none \
+    https://github.com/BirolLab/AMPlify.git /tmp/AMPlify
+cd /tmp/AMPlify
+git checkout 3a07713c25b8a21ef66d31d10e121989d26d9320 -- \
+    data/AMPlify_AMP_train_common.fa \
+    data/AMPlify_AMP_test_common.fa \
+    data/AMPlify_non_AMP_train_balanced.fa \
+    data/AMPlify_non_AMP_test_balanced.fa
+mkdir -p data/raw/tools/amplify/
+cp data/AMPlify_AMP_train_common.fa \
+   data/AMPlify_AMP_test_common.fa \
+   data/AMPlify_non_AMP_train_balanced.fa \
+   data/AMPlify_non_AMP_test_balanced.fa \
+   data/raw/tools/amplify/
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+data/raw/tools/amplify/
+├── AMPlify_AMP_train_common.fa
+├── AMPlify_AMP_test_common.fa
+├── AMPlify_non_AMP_train_balanced.fa
+└── AMPlify_non_AMP_test_balanced.fa
+```
+
+#### 2.8 Ma et al. (2022)
+
+Ma et al. (2022) do not provide training data publicly; only the test sequences used in the paper are available. Files are stored in `data/raw/tools/ma_et_al/`.
+
+- **URL:** https://github.com/mayuefine/c_AMPs-prediction/tree/master/Data
+- **Files:** `AMPs.fa`, `Non-AMPs.fa`
+- **Steps:** Download both files, preserving their original names.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+git clone --no-checkout --filter=blob:none \
+    https://github.com/mayuefine/c_AMPs-prediction.git /tmp/c_AMPs-prediction
+cd /tmp/c_AMPs-prediction
+git checkout cf7658bc5d504ba6d996fa7b152270e38275dc46 -- \
+    Data/AMPs.fa \
+    Data/Non-AMPs.fa
+mkdir -p data/raw/tools/ma_et_al/
+cp Data/AMPs.fa Data/Non-AMPs.fa data/raw/tools/ma_et_al/
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+data/raw/tools/ma_et_al/
+├── AMPs.fa
+└── Non-AMPs.fa
+```
+
+#### 2.9 CAMP<sub>R4</sub> prediction server
+
+CAMP<sub>R4</sub> does not provide any of the datasets used to train or test its models (ANN, RF, and SVM). No files are downloaded for this tool.
+
+#### 2.10 AMP-BERT
+
+AMP-BERT (Lee et al., 2023) distributes its training data as CSV files at the root of the repository. Files are stored in `data/raw/tools/amp_bert/`.
+
+- **URL:** https://github.com/GIST-CSBL/AMP-BERT
+- **Files:** `non_amp_ampep_cdhit90.csv`, `veltri_dramp_cdhit_90.csv`, `all_veltri.csv`
+- **Steps:** Download those three files, preserving their original names.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+git clone --no-checkout --filter=blob:none \
+    https://github.com/GIST-CSBL/AMP-BERT.git /tmp/AMP-BERT
+cd /tmp/AMP-BERT
+git checkout b9ba228180b6edc04f39cac4724281af5f031db5 -- \
+    non_amp_ampep_cdhit90.csv \
+    veltri_dramp_cdhit_90.csv \
+    all_veltri.csv
+mkdir -p data/raw/tools/amp_bert/
+cp non_amp_ampep_cdhit90.csv \
+   veltri_dramp_cdhit_90.csv \
+   all_veltri.csv \
+   data/raw/tools/amp_bert/
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+data/raw/tools/amp_bert/
+├── non_amp_ampep_cdhit90.csv
+├── veltri_dramp_cdhit_90.csv
+└── all_veltri.csv
+```
+
+#### 2.11 AMPFinder (stage 1 classifier)
+
+AMPFinder (Yang et al., 2023) is a two-stage classifier; only the stage 1 data (AMP vs. non-AMP discrimination) is relevant here. The stage 2 data (functional classification) is not considered. Files are stored in `data/raw/tools/ampfinder/`.
+
+- **URL:** https://github.com/abcair/AMPFinder/tree/main/data/D1
+- **Files:** `3594-Samp.fasta`, `3925-Snonamp.fasta` (two of the four files present in D1)
+- **Steps:** Download those two files, preserving their original names.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+git clone --no-checkout --filter=blob:none \
+    https://github.com/abcair/AMPFinder.git /tmp/AMPFinder
+cd /tmp/AMPFinder
+git checkout 666b173d62c59627ac37ea7508467ee82cd9ec67 -- \
+    data/D1/3594-Samp.fasta \
+    data/D1/3925-Snonamp.fasta
+mkdir -p data/raw/tools/ampfinder/
+cp data/D1/3594-Samp.fasta \
+   data/D1/3925-Snonamp.fasta \
+   data/raw/tools/ampfinder/
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+data/raw/tools/ampfinder/
+├── 3594-Samp.fasta
+└── 3925-Snonamp.fasta
+```
+
+#### 2.12 AMP-RNNpro
+
+AMP-RNNpro (Shaon et al., 2024) distributes its training and test sequences at the root of the repository. Files are stored in `data/raw/tools/amp_rnnpro/`.
+
+- **URL:** https://github.com/Shazzad-Shaon3404/Antimicrobials_
+- **Files:** `train_p.fasta`, `trainn_n.fasta`, `testp`, `testn`, `README.md`
+- **Steps:** Download those five files, preserving their original names. Note that `Train_file` is also present in the repository but is an empty placeholder (0 bytes) and is not needed. Also note that on Windows, `testp` and `testn` may be saved with a `.txt` extension appended; rename them if so.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+git clone --no-checkout --filter=blob:none \
+    https://github.com/Shazzad-Shaon3404/Antimicrobials_.git /tmp/Antimicrobials_
+cd /tmp/Antimicrobials_
+git checkout a2946913193422cc3fb05d7578eb37d09f646884 -- \
+    train_p.fasta \
+    trainn_n.fasta \
+    testp \
+    testn \
+    README.md
+mkdir -p data/raw/tools/amp_rnnpro/
+cp train_p.fasta trainn_n.fasta testp testn README.md \
+   data/raw/tools/amp_rnnpro/
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+data/raw/tools/amp_rnnpro/
+├── train_p.fasta
+├── trainn_n.fasta
+├── testp
+├── testn
+└── README.md
+```
+
+#### 2.13 PyAMPA (AMPValidate)
+
+The AMPValidate model from PyAMPA was trained on the AMPlify training dataset (§ 2.7) using a 60/20/20 train/val/test split. No separate data files are provided by the authors; no action is needed here.
+
+#### 2.14 AGRAMP (3-gram 9-letter model)
+
+AGRAMP (Shao et al., 2024) distributes its training and test datasets through a dedicated web page. Files are stored in `data/raw/tools/agramp/`. Note that these files cannot be downloaded automatically: each link must be right-clicked and saved individually ("Save link as…"), as left-clicking opens the FASTA content in a new browser tab instead of downloading it.
+
+- **URL:** http://omics.gmu.edu/agramp/datasets.php
+- **Steps:** Right-click each link listed below, choose "Save link as…", and save the file under the name indicated.
+
+| Link label on the page | Save as |
+|------------------------|---------|
+| Positive training set (1500) | `AMP_train.fasta` |
+| Positive testing set (139) | `AMP_test.fasta` |
+| Negative training set (1500), NOAMP1 | `NOAMP1_train.fasta` |
+| Negative testing set (139), NOAMP1 | `NOAMP1_test.fasta` |
+| Negative training set (1500), NOAMP2 | `NOAMP2_train.fasta` |
+| Negative testing set (139), NOAMP2 | `NOAMP2_test.fasta` |
+| Negative training set (1500), NOAMP3 | `NOAMP3_train.fasta` |
+| Negative testing set (139), NOAMP3 | `NOAMP3_test.fasta` |
+
+All three negative sets are used in the benchmark, as the authors do not specify which one was used for non-AMP sequences.
+
+The resulting directory should look like:
+
+```
+data/raw/tools/agramp/
+├── AMP_train.fasta
+├── AMP_test.fasta
+├── NOAMP1_train.fasta
+├── NOAMP1_test.fasta
+├── NOAMP2_train.fasta
+├── NOAMP2_test.fasta
+├── NOAMP3_train.fasta
+└── NOAMP3_test.fasta
+```
+
+#### 2.15 PepNet
+
+PepNet (Han et al., 2024) distributes its datasets through Zenodo, which assigns a persistent DOI to each record — a better practice for reproducibility than GitHub, where content can be altered or removed without notice. Files are stored in `data/raw/tools/pepnet/`.
+
+- **URL:** https://zenodo.org/records/13223516
+- **Steps:** Download `datasets.tar.gz` from the record and extract it. The archive contains a `datasets/` folder with three subfolders (`AMP/`, `AIP/`, `Toxic/`) and a `properties.pkl` file, all of which are extracted directly inside `data/raw/tools/pepnet/`.
+> **Note:** The `properties.pkl` file and the `AMP/checkpoints/` and `AMP/feature/` subfolders, required for PepNet predictions, are already integrated in the corresponding Docker image utilized in the evaluation pipeline. `AMP/checkpoints/`, `AMP/feature/`, `AIP/checkpoints/`, `AIP/feature/`, `Toxic/checkpoints/` and `Toxic/feature/` contain heavy files and are not included in the repository.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+wget -O /tmp/pepnet_datasets.tar.gz \
+    'https://zenodo.org/records/13223516/files/datasets.tar.gz?download=1'
+tar -xzf /tmp/pepnet_datasets.tar.gz -C data/raw/tools/pepnet/
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+data/raw/tools/pepnet/
+├── AMP/
+├── AIP/
+├── Toxic/
+└── properties.pkl
+```
+
+#### 2.16 KT-AMPpred
+
+KT-AMPpred (Liang et al., 2025) distributes its training and test data in the `data/` folder of the repository. Files are stored in `data/raw/tools/kt_amppred/`.
+
+- **URL:** https://github.com/liangxiaodata/AMPpred/tree/main/data
+- **Steps:** Download all files from that folder, preserving their original names.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+git clone --no-checkout --filter=blob:none \
+    https://github.com/liangxiaodata/AMPpred.git /tmp/AMPpred
+cd /tmp/AMPpred
+git sparse-checkout set data
+git checkout b4a7276e73b212b1be98256e0c9aa236caa20540
+mkdir -p data/raw/tools/kt_amppred/
+cp data/* data/raw/tools/kt_amppred/
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+data/raw/tools/kt_amppred/
+├── ABP_DS_test.tsv
+├── ABP_DS_train.tsv
+├── AFP_DS_test.tsv
+├── AFP_DS_train.tsv
+├── AMP_DS_test.tsv
+├── AMP_DS_train.tsv
+├── AVP_DS_test.tsv
+├── AVP_DS_train.tsv
+└── README.md
+```
+
+#### 2.17 PLAPD
+
+PLAPD (Zhang et al., 2025) stores its data in the `data/datasets/AMP/` folder of the repository, which contains many files. Only two are needed for leakage testing and the evaluation pipeline; these were identified by manually verifying sequence counts. Files are stored in `data/raw/tools/plapd/`.
+
+- **URL:** https://github.com/lichaozhang2/PLAPD/tree/main/data/datasets/AMP
+- **Files:** `training_data.csv`, `val_data.csv`
+- **Steps:** Download those two files, preserving their original names.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+git clone --no-checkout --filter=blob:none \
+    https://github.com/lichaozhang2/PLAPD.git /tmp/PLAPD
+cd /tmp/PLAPD
+git checkout 5f5c6ef4b21adc9e297d240e41bc1e2ca065c54b -- \
+    data/datasets/AMP/training_data.csv \
+    data/datasets/AMP/val_data.csv
+mkdir -p data/raw/tools/plapd/
+cp data/datasets/AMP/training_data.csv \
+   data/datasets/AMP/val_data.csv \
+   data/raw/tools/plapd/
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+data/raw/tools/plapd/
+├── training_data.csv
+└── val_data.csv
+```
+
+#### 2.18 DLFea4AMPGen
+
+DLFea4AMPGen (Gao et al., 2025) distributes its dataset in the `Dataset/` folder of the repository, which includes four subfolders and an Excel file. Files are stored in `data/raw/tools/dlfea4ampgen/`.
+
+- **URL:** https://github.com/hgao12345/DLFea4AMPGen/tree/main/Dataset
+- **Steps:** Download all contents of that folder, preserving the folder structure.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+git clone --no-checkout --filter=blob:none \
+    https://github.com/hgao12345/DLFea4AMPGen.git /tmp/DLFea4AMPGen
+cd /tmp/DLFea4AMPGen
+git sparse-checkout set Dataset
+git checkout 6ec4a46a206f2501e0c29abf453ae6e0ddb5227e
+mkdir -p data/raw/tools/dlfea4ampgen/
+cp -r Dataset/* data/raw/tools/dlfea4ampgen/
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+data/raw/tools/dlfea4ampgen/
+├── ABP/
+├── AFP/
+├── AOP/
+├── Other/
+├── AMP_from_5databases.xlsx
+└── README.md
+```
+
+#### 2.19 MultiAMP
+
+MultiAMP (Li et al., 2026) distributes its dataset through Hugging Face, which — like Zenodo — uses persistent identifiers. Files are stored in `data/raw/tools/multiamp/`.
+
+- **URL:** https://huggingface.co/jiayi11/multi_amp/blob/main/data.tar.gz
+- **Steps:** Download `data.tar.gz` and extract it. The archive contains three folders (`structure/`, `test_amp/`, and `train_amp/`), which will be extracted directly inside `data/raw/tools/multiamp/`. The `structure/` folder is not used in the evaluation pipeline or leakage tests and is not included in the repository.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+wget -O /tmp/multiamp_data.tar.gz \
+    'https://huggingface.co/jiayi11/multi_amp/resolve/7c2b1b86304b62e9d0ff4d186c6be6ca82e02e28/data.tar.gz'
+tar -xzf /tmp/multiamp_data.tar.gz -C data/raw/tools/multiamp/
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+data/raw/tools/multiamp/
+├── structure/
+├── test_amp/
+└── train_amp/
+```
+
+---
+
+### 3. Non-AMP Sequences from UniProt
+
+Files are stored in `data/raw/non_amps/`. Non-AMP sequences are retrieved from UniProt using a query designed to select secreted peptides while explicitly excluding an extensive collection of antimicrobial-related keywords. Two subsets are downloaded to balance the evaluation dataset in case ABP sequences outnumber reviewed non-AMP sequences.
+
+#### UniProt Query
+
+```
+(length:[5 TO 255]) NOT (keyword:KW-0929) NOT (keyword:KW-0211) NOT (keyword:KW-0044)
+AND (keyword:KW-0964) NOT (keyword:KW-0930) NOT (keyword:KW-0295) NOT (keyword:KW-0878)
+NOT (keyword:KW-0078) NOT (keyword:KW-0081) NOT (keyword:KW-0425)
+```
+
+**Keyword meanings:**
+
+| Keyword | Description |
+|---------|-------------|
+| KW-0044 | Antibiotic |
+| KW-0078 | Bacteriocin |
+| KW-0081 | Bacteriolytic enzyme |
+| KW-0211 | Defensin |
+| KW-0295 | Fungicide |
+| KW-0425 | Lantibiotic |
+| KW-0878 | Amphibian defense peptide |
+| KW-0929 | Antimicrobial |
+| KW-0930 | Antiviral protein |
+| KW-0964 | Secreted *(included — positive filter)* |
+
+#### 3.1 Reviewed sequences (Swiss-Prot)
+
+- **URL:** https://www.uniprot.org/
+- **Steps:**
+  1. Paste the query above into the UniProt search bar and press Enter.
+  2. In the **Status** panel (top left), click **Reviewed (Swiss-Prot)**.
+  3. Click **Download** (above the results table).
+  4. In the download panel: set **Download all**, format **FASTA (canonical)**, and **Compressed: No** (or decompress the file to place the FASTA in `data/raw/non_amps/`).
+- **Downloaded file:** e.g. `uniprotkb_length_5_TO_255_NOT_keyword_K_2026_04_21.fasta` *(filename includes the download date)*
+- **Rename to:** `uniprot_reviewed.fasta`
+- **Downloaded entries:** 17,637
+
+#### 3.2 Unreviewed sequences (TrEMBL)
+
+- **Steps:** Same as above, but in the **Status** panel deselect **Reviewed (Swiss-Prot)** and select **Unreviewed (TrEMBL)** instead.
+- **Downloaded file:** e.g. `uniprotkb_length_5_TO_255_NOT_keyword_K_2026_04_21.fasta.gz` *(may be compressed)*
+- **Rename to:** `uniprot_unreviewed.fasta`
+- **Note:** Decompress the file before running the pipeline if it was downloaded as `.gz`.
+- **Downloaded entries:** 743,594
+> **Note:** The processing pipeline subsamples this file to balance the dataset only if the number of ABPs for evaluation exceeds the number of reviewed non-AMPs for evaluation.
+---
+
+### 4. Sequence Counts After Preprocessing
+
+After download, sequences are preprocessed prior to building the evaluation dataset. Preprocessing strips leading/trailing whitespace, uppercases all sequences, and removes exact duplicates:
+
+```python
+def strip_upper_unique_by_sequence(dataframe):
+    """
+    Strips whitespace, uppercases sequences and drops duplicate sequences.
+    Returns a reset-indexed copy.
+    """
+    df = dataframe.copy()
+    df["Sequence"] = df["Sequence"].str.strip().str.upper()
+    df = df.drop_duplicates(subset=["Sequence"]).reset_index(drop=True)
+    return df
+```
+
+The table below summarises entry counts at each stage. Note that future downloads from the same sources may yield different numbers as databases are updated.
+
+| Source | Downloaded entries | Distinct raw sequences | Sequences after preprocessing |
+|--------|------------------:|----------------------:|-------------------------------:|
+| APD | 5,496 | 5,494 | 5,494 |
+| DRAMP | 4,159 | 4,049 | 4,010 |
+| dbAMP | 7,625 | 7,622 | 7,619 |
+| DBAASP | 20,980 | 17,970 | 17,009 |
+| AMPDB | 6,446 | 5,593 | 5,593 |
+| UniProt reviewed (Swiss-Prot) | 17,637 | 16,191 | 16,191 |
+| UniProt unreviewed (TrEMBL) | 743,594 | 656,985 | 656,985 |
+
+## Model Acquisition *(reproducibility only — can be skipped)*
+
+Unlike the raw data in `data/raw/`, model files are **not included** in this repository. They are bundled directly inside the Docker images used by the evaluation pipeline, so no manual model setup is required to run `main.nf`. This section documents how to obtain each model file for end-to-end reproducibility when rebuilding Docker images from scratch. You can skip ahead to [Reproducing the Pipeline](#reproducing-the-pipeline) if you do not need to rebuild the images.
+
+```
+models/
+├── amp_bert/                      *
+│   └── amp_bert_model/
+│       ├── config.json
+│       ├── model.safetensors
+│       └── training_args.bin
+├── ampfinder/                     +
+│   └── AMPFinder.identify.rf
+├── dlfea4ampgen/                  +
+│   └── ABP_Best_Model.ckpt
+├── kt_amppred/                    *
+│   └── finetune_peptide_model/
+│       ├── classifier_weights.pth
+│       ├── config.json
+│       └── pytorch_model.bin
+├── lmpred/                        *
+│   ├── lmpred_best_model.keras
+│   └── lmpred_training_curves.png
+├── ma_et_al/                      +
+│   └── bert.bin
+├── multiamp/                      +
+│   └── best_model_overall.pth
+├── pepnet/                        +
+│   ├── checkpoints/
+│   │   └── 2024_03_27_19_58_59_951/
+│   │       └── model/
+│   │           └── model_final.pth
+│   └── properties.pkl
+├── plapd/                         *
+│   └── my_best_model_without_embedding.pth
+├── prot_t5_xl_half_uniref50-enc/  +
+│   ├── config.json
+│   ├── pytorch_model.bin
+│   ├── README.md
+│   ├── special_tokens_map.json
+│   ├── spiece.model
+│   └── tokenizer_config.json
+└── pyampa/                        +
+    ├── AMPValidate.pkl
+    └── amp_validate_vectorizer.pkl
+```
+
+`*` Trained for this review · `+` Downloaded from external source
+
+---
+
+### Downloaded models
+
+A convenience script is provided to download all models that support automated retrieval:
+
+```bash
+bash scripts/download_models.sh
+```
+
+Two models are not covered by the script: PepNet (extracted from the tool dataset archive already downloaded in [Dataset Acquisition § 2](#2-tool-datasets)) and ProtT5-XL-UniRef50 (requires the `huggingface_hub` Python package). Their manual steps are documented below.
+
+#### D.1 Ma et al. (2022) — BERT model (`models/ma_et_al/`)
+
+- **Source:** https://www.dropbox.com/sh/o58xdznyi6ulyc6/AABLckEnxP54j2X7BrGybhyea?dl=0
+- **File:** `bert.bin`
+- **Steps:** Download the ZIP from Dropbox, extract `bert.bin`, verify integrity, and remove the archive.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+mkdir -p models/ma_et_al
+wget -O models/ma_et_al/bert.zip \
+    'https://www.dropbox.com/sh/o58xdznyi6ulyc6/AABLckEnxP54j2X7BrGybhyea?dl=1'
+unzip -o models/ma_et_al/bert.zip -d models/ma_et_al/
+rm models/ma_et_al/bert.zip
+echo "990d14de053d8080fcca33d712d647b6  models/ma_et_al/bert.bin" | md5sum -c -
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+models/ma_et_al/
+└── bert.bin
+```
+
+---
+
+#### D.2 AMPFinder — random forest model (`models/ampfinder/`)
+
+- **Source:** https://github.com/abcair/AMPFinder
+- **File:** `AMPFinder.identify.rf` (inside `AMPFinder.identify.zip`)
+- **Steps:** Download the ZIP, extract it, and remove the archive.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+mkdir -p models/ampfinder
+wget -O /tmp/AMPFinder.identify.zip \
+    'https://github.com/abcair/AMPFinder/raw/main/qt5/model/AMPFinder.identify.zip'
+unzip /tmp/AMPFinder.identify.zip -d models/ampfinder/
+rm /tmp/AMPFinder.identify.zip
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+models/ampfinder/
+└── AMPFinder.identify.rf
+```
+
+---
+
+#### D.3 PyAMPA — AMPValidate model and vectorizer (`models/pyampa/`)
+
+- **Source:** https://github.com/SysBioUAB/PyAMPA
+- **Files:** `AMPValidate.pkl`, `amp_validate_vectorizer.pkl`
+- **Steps:** Download both files from the repository.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+mkdir -p models/pyampa
+wget -O models/pyampa/AMPValidate.pkl \
+    'https://github.com/SysBioUAB/PyAMPA/raw/main/AMPValidate.pkl'
+wget -O models/pyampa/amp_validate_vectorizer.pkl \
+    'https://github.com/SysBioUAB/PyAMPA/raw/main/amp_validate_vectorizer.pkl'
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+models/pyampa/
+├── AMPValidate.pkl
+└── amp_validate_vectorizer.pkl
+```
+
+---
+
+#### D.4 PepNet — checkpoint and properties dictionary (`models/pepnet/`)
+
+- **Source:** https://zenodo.org/records/13223516 (same archive as the PepNet tool dataset)
+- **Files:** `checkpoints/2024_03_27_19_58_59_951/model/model_final.pth` and `properties.pkl`
+- **Steps:** The Zenodo archive is already downloaded and extracted during [Dataset Acquisition § 2.15](#215-pepnet) to `data/raw/tools/pepnet/`. The model files live under the `AMP/` subfolder of that extraction. Copy them to `models/pepnet/`:
+
+```bash
+mkdir -p models/pepnet/checkpoints
+cp -r data/raw/tools/pepnet/AMP/checkpoints/2024_03_27_19_58_59_951 \
+    models/pepnet/checkpoints/
+cp data/raw/tools/pepnet/properties.pkl models/pepnet/
+```
+
+The resulting directory should look like:
+
+```
+models/pepnet/
+├── checkpoints/
+│   └── 2024_03_27_19_58_59_951/
+│       └── model/
+│           └── model_final.pth
+└── properties.pkl
+```
+
+---
+
+#### D.5 ProtT5-XL-UniRef50 — half-precision encoder (`models/prot_t5_xl_half_uniref50-enc/`)
+
+Encoder-only, half-precision version of ProtT5-XL-UniRef50. Used by PepNet for feature extraction.
+
+- **Source:** https://huggingface.co/Rostlab/prot_t5_xl_half_uniref50-enc
+
+```bash
+pip install huggingface_hub
+python -c "
+from huggingface_hub import snapshot_download
+snapshot_download(
+    repo_id='Rostlab/prot_t5_xl_half_uniref50-enc',
+    local_dir='models/prot_t5_xl_half_uniref50-enc'
+)
+"
+```
+
+The resulting directory should look like:
+
+```
+models/prot_t5_xl_half_uniref50-enc/
+├── config.json
+├── pytorch_model.bin
+├── README.md
+├── special_tokens_map.json
+├── spiece.model
+└── tokenizer_config.json
+```
+
+---
+
+#### D.6 DLFea4AMPGen — ABP checkpoint (`models/dlfea4ampgen/`)
+
+- **Source:** https://zenodo.org/records/16545412
+- **File:** `ABP_Model.ckpt`, to be renamed to `ABP_Best_Model.ckpt`
+- **Steps:** Click **ABP_Model.ckpt** in the Files table on the Zenodo record page, or download directly and rename.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+mkdir -p models/dlfea4ampgen
+wget -O models/dlfea4ampgen/ABP_Best_Model.ckpt \
+    'https://zenodo.org/records/16545412/files/ABP_Model.ckpt?download=1'
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+models/dlfea4ampgen/
+└── ABP_Best_Model.ckpt
+```
+
+---
+
+#### D.7 MultiAMP — sequence-only model (`models/multiamp/`)
+
+- **Source:** https://huggingface.co/jiayi11/multi_amp/blob/main/checkpoints/best_model_overall.pth
+- **File:** `best_model_overall.pth`
+- **Steps:** Download the file from HuggingFace.
+
+<details>
+<summary>Optional: download via command line</summary>
+
+```bash
+mkdir -p models/multiamp
+wget -O models/multiamp/best_model_overall.pth \
+    'https://huggingface.co/jiayi11/multi_amp/resolve/main/checkpoints/best_model_overall.pth'
+```
+
+</details>
+
+The resulting directory should look like:
+
+```
+models/multiamp/
+└── best_model_overall.pth
+```
+
+---
+
+### Trained models
+
+The model files for AMP-BERT, KT-AMPpred, LMPred, and PLAPD were trained as part of this review because the original authors did not publish pre-trained weights. They are already embedded in their respective Docker images, so **retraining is not required** to run the evaluation pipeline. The workflows below are provided solely for reproducibility.
+
+> **Prerequisites:** the tool training datasets must be present in `data/raw/tools/` (see [Dataset Acquisition § 2](#2-tool-datasets)). The `tools_dir` parameter in `nextflow.config` points to that directory by default.
+
+| Tool | Model | Command | Training duration |
+|------|-------|---------|:-----------------:|
+| AMP-BERT | Fine-tuned ProtBERT-BFD | `nextflow run train_amp_bert.nf` | ~39 min |
+| KT-AMPpred | Fine-tuned AMP classifier | `nextflow run train_kt_amppred.nf` | ~4 h |
+| LMPred | T5 UniRef50 CNN | `nextflow run train_lmpred.nf` | ~37 min |
+| PLAPD | ESM2-based model | `nextflow run train_plapd.nf` | ~28 min |
+
+Trained weights are published under `results/models/` with the following layout:
+
+```
+results/models/
+├── amp_bert/
+│   └── amp_bert_model/
+│       ├── config.json
+│       ├── model.safetensors
+│       └── training_args.bin
+├── kt_amppred/
+│   └── finetune_peptide_model/
+│       ├── classifier_weights.pth
+│       ├── config.json
+│       └── pytorch_model.bin
+├── lmpred/
+│   ├── lmpred_best_model.keras
+│   └── lmpred_training_curves.png
+└── plapd/
+    └── my_best_model_without_embedding.pth
+```
+
+To use freshly trained weights in the evaluation pipeline instead of the bundled ones, copy the relevant files to the corresponding `models/<tool_name>/` directory and rebuild the Docker image before running `main.nf`.
+
+**AMP-BERT** — copy the output directory:
+
+```bash
+cp -r results/models/amp_bert/amp_bert_model models/amp_bert/
+```
+
+**KT-AMPpred** — copy the output directory:
+
+```bash
+cp -r results/models/kt_amppred/finetune_peptide_model models/kt_amppred/
+```
+
+**LMPred** — copy the model file, renaming it to match the filename expected by the prediction module:
+
+```bash
+cp results/models/lmpred/lmpred_best_model.keras \
+    models/lmpred/T5XL_UNI_best_model.epoch06-loss0.28.keras
+```
+
+**PLAPD** — copy the model file directly:
+
+```bash
+cp results/models/plapd/my_best_model_without_embedding.pth models/plapd/
+```
+
+---
+
+## Reproducing the Pipeline
+
+### Step 1 — Build the dataset
+
+```bash
+python scripts/build_base_dataset.py
+```
+
+This script reads ABP sequences from `data/raw/abps/`, non-AMP sequences from `data/raw/non_amps/`, and tool training sets from `data/raw/tools/`. It performs deduplication and sequence exclusion (removing tool training sequences from the evaluation set to ensure a fair benchmark), and produces:
+
+- `data/interim/complete_dataset_base.csv` — full unannotated dataset
+- `data/processed/evaluation_dataset/` — FASTA files and CSV inputs consumed by the Nextflow pipeline and web-only tools
+
+---
+
+### Step 2 — Run tool predictions
+
+#### Automated predictions (Nextflow)
+
+The evaluation pipeline is defined in `main.nf`. It reads the evaluation dataset files produced in Step 1, pulls the required Docker images automatically, and writes raw predictions to `results/tools_predictions/`.
+
+```bash
 nextflow run main.nf
+```
 
-# With Podman
-nextflow run main.nf -with-podman
+To resume a partially completed run after an interruption:
 
-# Resume a previous run
+```bash
 nextflow run main.nf -resume
 ```
 
-### Key parameters
+Prediction files are published to `results/tools_predictions/<tool_name>/`.
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `eval_dir` | `data/processed/evaluation_dataset` | Evaluation dataset folder |
-| `tools_dir` | `data/raw/tools` | Tool training datasets folder |
-| `models_dir` | `models` | Model files folder |
-| `lmpred_skip_training` | `true` | Skip LMPred training, use provided model |
-| `amp_bert_skip_training` | `true` | Skip AMP-BERT training, use provided model |
+#### Manual predictions (web-only tools)
 
-Parameters can be overridden at runtime:
+Two tools do not have a local executable and must be run via their web servers. Results should be saved to the corresponding directories under `results/tools_predictions/`.
+
+**CAMP<sub>R4</sub> prediction server**
+
+- **URL:** https://camp.bicnirrh.res.in/predict/
+- **Steps:**
+  1. Go to the prediction server.
+  2. Upload `data/processed/evaluation_dataset/evaluation_dataset.fasta`.
+  3. Select dataset: **Natural**; select models: **RF**, **SVM**, **ANN**.
+  4. Download the results and save them as:
+     - `results/tools_predictions/campr4/results_ann.tsv`
+     - `results/tools_predictions/campr4/results_rf.tsv`
+     - `results/tools_predictions/campr4/results_svm.tsv`
+
+**AGRAMP**
+
+Because the AGRAMP web server enforces a per-submission sequence limit, `build_base_dataset.py` splits `evaluation_dataset.fasta` into 9 roughly equal parts written to `data/processed/evaluation_dataset/splitted_fasta/` as `evaluation_dataset_part1.fasta` through `evaluation_dataset_part9.fasta`.
+
+- **URL:** http://omics.gmu.edu/agramp/
+- **Steps:**
+  1. Go to the prediction server.
+  2. In **Alphabet**, select **9 letter**; in **NGram**, select **3gram** (these are the defaults).
+  3. In the **Enter fasta** text block, paste the full content of `evaluation_dataset_part1.fasta`.
+  4. Submit the form. The page will reload with results.
+  5. Scroll down and click the **"Link to results table"** link.
+  6. On the results page, select all (Ctrl+A), copy, and paste into `results/tools_predictions/agramp/3gram_9_letter_predictions.tsv`.
+  7. Repeat steps 3–6 for parts 2 through 9, appending the copied text to the same file each time.
+
+Once all 9 parts have been submitted and their results concatenated, clean the file using the provided helper script, which keeps only the first header line and removes blank lines and duplicate headers:
 
 ```bash
-nextflow run main.nf --lmpred_skip_training false
+bash scripts/clean_agramp_results.sh \
+    results/tools_predictions/agramp/3gram_9_letter_predictions.tsv
 ```
 
-## Post-processing
+The resulting file should look like:
 
-Once all predictions are available, merge them into the complete dataset and
-run the evaluation:
+```
+SeqID	Prob_AMP	Prob_NOAMP	AMP/NOAMP	AMP_ID	Peptide
+<sequence results...>
+```
+
+---
+
+### Step 3 — Annotate with tool predictions and physicochemical properties
 
 ```bash
-# Merge predictions
-python scripts/merge_predictions.py \
-    --complete_dataset  data/interim/complete_dataset.csv \
-    --annotated_dataset data/interim/complete_dataset_annotated.csv \
-    --predictions_dir   results/tools_predictions \
-    --output            data/processed/complete_dataset_final.csv
+python scripts/annotate_dataset.py
+```
 
-# Compute metrics and generate plots
+Reads `data/interim/complete_dataset_base.csv` and all prediction files from `results/tools_predictions/`, joins each tool's predictions to the dataset, and computes per-sequence physicochemical properties (molecular weight, isoelectric point, hydrophobicity, Boman index, etc.). The final annotated dataset is written to `data/processed/complete_dataset.csv` and is required by the analysis scripts in Step 4.
+
+---
+
+### Step 4 — Generate figures and tables
+
+All scripts below require the conda environment (`conda activate amp_review`).
+
+#### 4.1 — Sequence distribution and database overlap analysis
+
+```bash
+python scripts/distribution_and_correlation_analysis.py
+```
+
+Produces distribution plots of physicochemical properties per database, an UpSet plot for database overlap, net charge distributions, and Spearman correlation heatmaps. Outputs (PNG and PDF) are written to `results/sequences_analysis/`.
+
+#### 4.2 — Data leakage analysis
+
+```bash
+python scripts/testing_data_leakage.py
+```
+
+Investigates sequence overlap between the evaluation dataset and the training/test sets of each benchmarked tool. Reports class overlap (shared sequences between positive and negative sets within a tool) and partition overlap (shared sequences between a tool's training data and the evaluation set). Outputs a per-tool summary table.
+
+#### 4.3 — Tool evaluation metrics and plots
+
+```bash
 python scripts/evaluation_results.py
 ```
 
-Output files are saved to `results/evaluation/`.
+Produces bar charts of balanced accuracy, sensitivity, and specificity per tool; a pairwise agreement heatmap with hierarchical clustering; a TP/TN/FP/FN heatmap annotated with physicochemical properties; Spearman correlations between peptide error rate and physicochemical features; and logistic regression coefficients for the top-performing models. All outputs are written to `results/evaluation/`.
 
-## Citation
+---
 
-TODO
+## References
 
-## License
-
-TODO
+Alejandro Cisterna Garcia et al. *Antimicrobial peptide databases and prediction tools:
+Toward a standard evaluation framework*. ISSN: 2692-8205 Pages: 2026.05.19.726290
+Section: New Results. 21 May 2026. doi: 10.64898/2026.05.19.726290.
+url: https://www.biorxiv.org/content/10.64898/2026.05.19.726290v1
