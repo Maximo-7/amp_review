@@ -78,7 +78,7 @@ amp_review/
 
 ## Requirements
 
-The project was developed on **Ubuntu Linux** using **Nextflow v25.10.4**. Installation instructions for Nextflow are available at https://docs.seqera.io/nextflow/install. **Docker** is also required; all pipeline images are pulled automatically by Nextflow at runtime from https://hub.docker.com/repositories/alvaromaximo (and https://hub.docker.com/r/dveltri/ascan2 for the AMP Scanner image).
+The project was developed on **Ubuntu Linux** using **Nextflow v25.10.4.11173**. Installation instructions for Nextflow are available at https://docs.seqera.io/nextflow/install. **Docker** is also required; all pipeline images are pulled automatically by Nextflow at runtime from https://hub.docker.com/repositories/alvaromaximo (and https://hub.docker.com/r/dveltri/ascan2 for the AMP Scanner image).
 
 Standalone scripts in `scripts/` require a dedicated conda environment (see [Getting Started](#getting-started)).
 
@@ -222,10 +222,10 @@ The following tools are covered in the benchmark. The table lists data availabil
 
 | Tool | Reference | Training data available | Test data available | `data/raw/tools/` directory | Evaluated |
 |------|-----------|:-----------------------:|:-------------------:|:------------------:|-----------|
-| iAMP-2L | Xiao et al. (2013) | Yes¹ | Yes¹ | `iamp_2l/` | No — leakage check only |
+| iAMP-2L | Xiao et al. (2013) | Yes¹ | Yes¹ | `iamp_2l/` | No, leakage check only |
 | iAMPpred | Meher et al. (2017) | No | No | — | No |
 | AMP Scanner | Veltri et al. (2018) | Yes | Yes | `amp_scanner/` | Yes |
-| AmPEP | Bhadra et al. (2018) | Yes | No | `ampep/` | No — leakage check only |
+| AmPEP | Bhadra et al. (2018) | Yes | No | `ampep/` | No, leakage check only |
 | Macrel | Santos-Júnior et al. (2020) | Yes | No | `macrel/` | Yes |
 | amPEPpy (length/count balanced model) | Lawrence et al. (2021) | Yes | None (internal OOB) | `ampeppy/` | Yes |
 | LMPred (T5 UniRef50-based model) | Dee (2022) | Yes | Yes | `lmpred/` | Yes |
@@ -237,7 +237,7 @@ The following tools are covered in the benchmark. The table lists data availabil
 | AMPFinder (stage 1 classifier) | Yang et al. (2023) | Yes | Yes | `ampfinder/` | Yes |
 | GEU-AMP50 | Panwar et al. (2023) | No | No | — | No |
 | AMP-GSM | Söylemez et al. (2023) | No | No | — | No |
-| AMP-RNNpro | Shaon et al. (2024) | Yes | Yes | `amp_rnnpro/` | No — leakage check only |
+| AMP-RNNpro | Shaon et al. (2024) | Yes | Yes | `amp_rnnpro/` | No, leakage check only |
 | PyAMPA (AMPValidate) | Ramos-Llorens et al. (2024) | No² | No | — | Yes |
 | AGRAMP (3-gram 9-letter model) | Shao et al. (2024) | Yes | Yes | `agramp/` | Yes |
 | PepNet | Han et al. (2024) | Yes | Yes | `pepnet/` | Yes |
@@ -942,7 +942,7 @@ NOT (keyword:KW-0078) NOT (keyword:KW-0081) NOT (keyword:KW-0425)
 
 ### 4. Sequence Counts After Preprocessing
 
-After download, sequences are preprocessed prior to building the evaluation dataset. Preprocessing strips leading/trailing whitespace, uppercases all sequences, and removes exact duplicates:
+After download, sequences are preprocessed prior to building the complete dataset. Preprocessing strips leading/trailing whitespace, uppercases all sequences, and removes exact duplicates:
 
 ```python
 def strip_upper_unique_by_sequence(dataframe):

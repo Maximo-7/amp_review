@@ -238,7 +238,7 @@ plt.close(fig)
 
 
 # ===========================================================================
-# Figure 3 – Anomalous sequences from AMPDB
+# Figure 3 – Anomalous sequences from AMPDB (overlapped KDE)
 # ===========================================================================
 
 print("\n=== Figure 3: AMPDB anomalous sequences ===")
@@ -247,27 +247,20 @@ df_ampdb          = dfs_abps["AMPDB"]
 df_ampdb_anom     = df_ampdb[df_ampdb["Net Charge (pH 7)"] < -5]
 df_ampdb_non_anom = df_ampdb[df_ampdb["Net Charge (pH 7)"] >= -5]
 dfs_ampdb = {
-    "(Charge < -5)": df_ampdb_anom,
-    "(Charge ≥ -5)": df_ampdb_non_anom,
+    "Charge < -5": df_ampdb_anom,
+    "Charge ≥ -5": df_ampdb_non_anom,
 }
 
-fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-axes = axes.flatten()
+fig, ax = plt.subplots(figsize=(6, 4))
 colours_ampdb = ["tomato", "tab:olive"]
 
-for ax, (db_name, df), colour, label in zip(
-    axes, dfs_ampdb.items(), colours_ampdb, ["A", "B"]
-):
-    df["Sequence Length"].plot.density(ax=ax, alpha=0.9, color=colour)
-    ax.set_xlabel("Number of amino acids")
-    ax.set_ylabel("Density")
-    ax.set_title(f"Sequence Length {db_name}")
-    ax.text(
-        0.02, 0.98, label,
-        transform=ax.transAxes,
-        fontsize=18, fontweight="bold",
-        va="top", ha="left",
-    )
+for (db_name, df), colour in zip(dfs_ampdb.items(), colours_ampdb):
+    df["Sequence Length"].plot.density(ax=ax, alpha=0.9, color=colour, label=db_name)
+
+ax.set_xlabel("Number of amino acids")
+ax.set_ylabel("Density")
+ax.set_title("Sequence Length by Charge Threshold (AMPDB)")
+ax.legend()
 
 plt.tight_layout()
 save_figure(fig, "ampdb_anomalous", "ampdb_sequence_length")

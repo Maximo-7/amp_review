@@ -1295,6 +1295,16 @@ ax_E_sides     = [fig_paper.add_subplot(gs_E[1, 2 + k]) for k in range(n_side_E)
 ax_E_legend    = fig_paper.add_subplot(gs_E[:, 2 + n_side_E])
 ax_E_legend.set_axis_off()
 
+# "Properties" title spanning all side-strip columns in the top row
+ax_E_props_title = fig_paper.add_subplot(gs_E[0, 2:2 + n_side_E])
+ax_E_props_title.set_axis_off()
+ax_E_props_title.text(
+    0.5, 0.5, "Properties",
+    transform=ax_E_props_title.transAxes,
+    ha="center", va="center",
+    fontsize=24, fontweight="bold",
+)
+
 # Panel label E – placed on the left dendrogram row
 ax_E_top_dend.set_title(
     "Per-peptide prediction outcomes across tools",
