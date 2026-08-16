@@ -1,6 +1,6 @@
 # AMP Benchmark Pipeline
 
-This repository hosts the datasets and code to reproduce a Nextflow pipeline for the systematic evaluation of antimicrobial peptide (AMP) prediction tools assessed in our review [1].
+This repository hosts the datasets and code to reproduce a Nextflow pipeline for the systematic evaluation of antimicrobial peptide (AMP) prediction tools assessed in our review [1]. The processed datasets and a data dictionary are also available via Zenodo (DOI: https://doi.org/10.5281/zenodo.20966530).
 
 ## Introduction
 
