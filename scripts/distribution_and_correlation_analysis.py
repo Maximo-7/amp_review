@@ -2,8 +2,8 @@
 distribution_and_correlation_analysis.py
 =========================================
 Analyses the distribution of physicochemical properties of ABPs and their
-correlation across and against non-AMPs, and produces an UpSet plot for the
-database overlap of standard ABPs.
+correlation across and against non-AMPs, and produces an UpSet
+plot and a Venn diagram  for the database overlap of standard ABPs.
 
 Also performs a detailed Bactericidal Permeability-Increasing protein (BPI)
 incidence analysis within AMPDB, motivated by the pressence of anomalous
@@ -20,7 +20,7 @@ Output figures (PNG + PDF) are written to:
       distributions_abps_vs_non_amps/
       net_charge_abps_vs_non_amps/
       correlation_heatmaps/
-      upset_plot/
+      overlap_abps/
 
 Run from the project root:
     python scripts/distribution_and_correlation_analysis.py
@@ -34,7 +34,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy.stats import ks_2samp
-from upsetplot import plot as upset_plot
+from upsetplot import UpSet
+from venn import venn as venn_diagram
 
 
 # ---------------------------------------------------------------------------
@@ -141,8 +142,91 @@ XLABELS = [
     "Instability",
     "pH",
     "Hydrophobicity (GRAVY)",
-    "Free interaction energy (kcal/mol)",
+    "kcal/mol",
 ]
+
+
+# ---------------------------------------------------------------------------
+# X-axis limits: clip to a central percentile range of the data instead of
+# the strict min/max, so that a handful of outliers don't compress the bulk
+# of the distribution into a sliver of the panel. The KDE curve itself is
+# still computed from ALL the data — only the visible window is narrowed.
+#
+# A default percentile range applies to every property; XLIM_OVERRIDES sets
+# a different range (and/or a margin) for specific properties that need
+# looser or tighter clipping, or no clipping at all (lower=0, upper=100).
+# ---------------------------------------------------------------------------
+
+XLIM_LOWER_PCT_DEFAULT   = 0.5
+XLIM_UPPER_PCT_DEFAULT   = 99.5
+XLIM_MARGIN_FRAC_DEFAULT = 0.0
+
+XLIM_OVERRIDES = {
+    "Sequence Length":   dict(lower_pct=0,   upper_pct=100,  margin_frac=0.0),   # full range
+    "Molecular Weight":  dict(lower_pct=0,   upper_pct=100,  margin_frac=0.0),   # full range
+    "Net Charge (pH 7)": dict(lower_pct=0.1, upper_pct=99.9, margin_frac=0.0),   # milder clipping
+    "Aromaticity":       dict(lower_pct=0,   upper_pct=96,   margin_frac=0.0),   # tighter clipping
+    "Instability Index": dict(lower_pct=0.2, upper_pct=96,   margin_frac=0.0),   # tighter clipping
+    "Isoelectric Point": dict(lower_pct=0,   upper_pct=100,  margin_frac=0.03),  # full range + small margin
+}
+
+# Properties that cannot take negative values in a physically meaningful
+# sense; the left edge is clamped at 0 even if the margin would push it
+# below (e.g. a Sequence Length range starting near the true minimum should
+# not acquire a spurious negative lower bound).
+NONNEGATIVE_PROPS = {"Sequence Length", "Molecular Weight", "Aromaticity", "Isoelectric Point"}
+
+
+def _xlim_settings(prop: str) -> tuple[float, float, float]:
+    """Return (lower_pct, upper_pct, margin_frac) for *prop*, falling back
+    to the defaults when no override is set."""
+    cfg = XLIM_OVERRIDES.get(prop, {})
+    return (
+        cfg.get("lower_pct", XLIM_LOWER_PCT_DEFAULT),
+        cfg.get("upper_pct", XLIM_UPPER_PCT_DEFAULT),
+        cfg.get("margin_frac", XLIM_MARGIN_FRAC_DEFAULT),
+    )
+
+
+def compute_xlims(df: pd.DataFrame, properties: list[str]) -> dict[str, tuple[float, float]]:
+    """Return {property: (left, right)} x-axis limits, using each
+    property's percentile range and margin (see XLIM_OVERRIDES)."""
+    limits: dict[str, tuple[float, float]] = {}
+    for prop in properties:
+        data = df[prop].dropna()
+        if data.empty:
+            continue
+        lower_pct, upper_pct, margin_frac = _xlim_settings(prop)
+        lo, hi = np.percentile(data, [lower_pct, upper_pct])
+        margin = margin_frac * (hi - lo)
+        left, right = lo - margin, hi + margin
+        if prop in NONNEGATIVE_PROPS:
+            left = max(left, 0)
+        limits[prop] = (left, right)
+    return limits
+
+
+def print_ranges(title: str, df: pd.DataFrame, properties: list[str], limits: dict[str, tuple[float, float]]) -> None:
+    """Print, for each property, the true data range, the percentile range
+    and margin used, and the final axis limits."""
+    print(f"\n  {title}")
+    header = (
+        f"    {'Property':<20} {'Data min':>10} {'Data max':>10} "
+        f"{'Pct used':>12} {'Margin':>7} {'Axis left':>10} {'Axis right':>11}"
+    )
+    print(header)
+    print("    " + "-" * (len(header) - 4))
+    for prop in properties:
+        data = df[prop].dropna()
+        lo, hi = data.min(), data.max()
+        lower_pct, upper_pct, margin_frac = _xlim_settings(prop)
+        axis_left, axis_right = limits.get(prop, (float("nan"), float("nan")))
+        pct_str = f"{lower_pct:g}-{upper_pct:g}%"
+        print(
+            f"    {prop:<20} {lo:>10.2f} {hi:>10.2f} "
+            f"{pct_str:>12} {margin_frac:>7.2f} "
+            f"{axis_left:>10.2f} {axis_right:>11.2f}"
+        )
 
 
 # ===========================================================================
@@ -151,14 +235,10 @@ XLABELS = [
 
 print("\n=== Figure 1: density distributions per AMP database ===")
 
-# Dynamic x-limits for Net Charge and Instability Index
-dynamic_props_db = ["Net Charge (pH 7)", "Instability Index"]
-prop_limits_db: dict[str, tuple[float, float]] = {}
-for prop in dynamic_props_db:
-    global_min = df_abps_standard[prop].min()
-    global_max = df_abps_standard[prop].max()
-    margin = 0.05 * (global_max - global_min)
-    prop_limits_db[prop] = (global_min - margin, global_max + margin)
+# x-limits derived from the actual range of each property across the
+# standard ABPs (the union of all per-database subsets plotted below)
+prop_limits_db = compute_xlims(df_abps_standard, PROPERTIES)
+print_ranges("Data ranges (standard ABPs, all databases pooled):", df_abps_standard, PROPERTIES, prop_limits_db)
 
 fig, axes = plt.subplots(4, 2, figsize=(12, 16))
 axes = axes.flatten()
@@ -171,10 +251,6 @@ for i, (ax, prop, xlabel) in enumerate(zip(axes, PROPERTIES, XLABELS)):
     ax.set_ylabel("Density")
     ax.set_title(prop)
 
-    if prop in ("Sequence Length", "Molecular Weight"):
-        ax.set_xlim(left=0)
-    if prop == "Aromaticity":
-        ax.set_xlim(left=0, right=1)
     if prop in prop_limits_db:
         ax.set_xlim(prop_limits_db[prop])
 
@@ -256,6 +332,39 @@ colours_ampdb = ["tomato", "tab:olive"]
 
 for (db_name, df), colour in zip(dfs_ampdb.items(), colours_ampdb):
     df["Sequence Length"].plot.density(ax=ax, alpha=0.9, color=colour, label=db_name)
+
+# x-axis: restrict to the actual data range (both groups combined) with a
+# small margin, instead of the wider automatic KDE padding
+seq_data = df_ampdb["Sequence Length"]
+x_lo, x_hi = seq_data.min(), seq_data.max()
+x_margin = 0.05 * (x_hi - x_lo)
+ax.set_xlim(max(x_lo - x_margin, 0), x_hi + x_margin)
+
+# Rug marks in a dedicated strip below the curves (y < 0), one lane per
+# group, so they never overlap the curves, the x-axis line, or each other.
+# The strip is carved out by extending ylim downward in DATA coordinates,
+# so it occupies real, reserved space rather than sitting on top of
+# anything.
+y_top = ax.get_ylim()[1]
+lane_h        = 0.06 * y_top   # thickness of each lane
+top_gap       = 0.014 * y_top  # gap between the curves' zero line and the first lane
+mid_gap       = 0.02  * y_top  # gap between the two lanes
+bottom_margin = 0.014 * y_top  # gap below the last lane and the axis edge
+
+lane_tops = [
+    -top_gap,                              # tomato (closest to the curves)
+    -top_gap - lane_h - mid_gap,           # olive
+]
+
+ax.set_ylim(lane_tops[1] - lane_h - bottom_margin, y_top)
+
+for (db_name, df), colour, lane_top in zip(dfs_ampdb.items(), colours_ampdb, lane_tops):
+    ax.vlines(
+        df["Sequence Length"], lane_top - lane_h, lane_top,
+        color=colour, alpha=0.8, linewidth=0.6,
+    )
+
+ax.axhline(0, color="black", linewidth=0.6, alpha=0.4)
 
 ax.set_xlabel("Number of amino acids")
 ax.set_ylabel("Density")
@@ -588,14 +697,12 @@ print("\n=== Figure 4: density distributions ABPs vs non-AMPs ===")
 dfs_standard = {"ABPs": df_abps_standard, "non-AMPs": df_non_amps_standard}
 df_reference  = pd.concat([df_abps_standard, df_non_amps_standard], ignore_index=True)
 
-# Dynamic x-limits (1 % margin)
-dynamic_props_std = ["Net Charge (pH 7)", "Instability Index"]
-prop_limits_std: dict[str, tuple[float, float]] = {}
-for prop in dynamic_props_std:
-    global_min = df_reference[prop].min()
-    global_max = df_reference[prop].max()
-    margin = 0.01 * (global_max - global_min)
-    prop_limits_std[prop] = (global_min - margin, global_max + margin)
+# x-limits derived from the actual combined range of ABPs + non-AMPs
+prop_limits_std = compute_xlims(df_reference, PROPERTIES)
+print_ranges("Data ranges (ABPs + non-AMPs combined):", df_reference, PROPERTIES, prop_limits_std)
+print_ranges("Data ranges (ABPs only):", df_abps_standard, PROPERTIES, prop_limits_std)
+print_ranges("Data ranges (non-AMPs only):", df_non_amps_standard, PROPERTIES, prop_limits_std)
+print()
 
 fig, axes = plt.subplots(4, 2, figsize=(12, 16))
 axes = axes.flatten()
@@ -613,10 +720,6 @@ for i, (ax, prop, xlabel) in enumerate(zip(axes, PROPERTIES, XLABELS)):
     ax.set_ylabel("Density")
     ax.set_title(prop)
 
-    if prop in ("Sequence Length", "Molecular Weight"):
-        ax.set_xlim(left=0)
-    if prop == "Aromaticity":
-        ax.set_xlim(left=0, right=1)
     if prop in prop_limits_std:
         ax.set_xlim(prop_limits_std[prop])
 
@@ -742,10 +845,12 @@ plt.close(fig)
 
 
 # ===========================================================================
-# Figure 7 – UpSet plot of standard ABPs from databases
+# Figure 7 – UpSet plot (A) + Venn diagram (B) of standard ABPs from
+# databases. Both panels encode the exact same five-set overlap; the Venn
+# diagram is a schematic (non-area-proportional) 5-ellipse layout.
 # ===========================================================================
 
-print("\n=== Figure 7: UpSet plot ===")
+print("\n=== Figure 7: UpSet plot (A) + Venn diagram (B) ===")
 
 df_upset = complete_dataset[
     complete_dataset["ABP_from_databases"] &
@@ -757,7 +862,37 @@ for db in amp_databases:
     col = f"{db}_ID"
     df_upset[db] = complete_dataset.loc[df_upset.index, col].notna().values
 
+# Per-database sets of row identifiers for the Venn diagram
+venn_sets = {
+    db: set(df_upset.index[df_upset[db]])
+    for db in amp_databases
+}
+
 df_upset = df_upset.set_index(amp_databases)
+
+# ---------------------------------------------------------------------------
+# Both panels are built as native matplotlib axes placed by hand from
+# explicit figure-fraction bounding boxes
+# ---------------------------------------------------------------------------
+
+FIG_W, FIG_H = 20, 7.0
+LEFT, RIGHT, TOP, BOTTOM = 0.033, 0.995, 0.95, 0.08
+GAP = 0.006   # figure-fraction gap between the two panels
+
+fig = plt.figure(figsize=(FIG_W, FIG_H))
+
+avail_h_in = (TOP - BOTTOM) * FIG_H
+venn_w_frac = avail_h_in / FIG_W     # square box in inches -> no letterboxing
+box_venn  = dict(left=RIGHT - venn_w_frac, right=RIGHT, bottom=BOTTOM, top=TOP)
+box_upset = dict(left=LEFT, right=box_venn["left"] - GAP, bottom=BOTTOM, top=TOP)
+
+# --- Panel A: UpSet plot, drawn directly into box_upset --------------------
+upset = UpSet(
+    df_upset,
+    show_counts=True,
+    orientation="horizontal",
+    element_size=None,   # fill whatever width/height it is given
+)
 
 # upsetplot calls fillna(..., inplace=True) internally; suppress the pandas
 # FutureWarning that originates inside the library (not fixable from user code)
@@ -767,10 +902,43 @@ with warnings.catch_warnings():
         category=FutureWarning,
         message=".*inplace method.*",
     )
-    fig = plt.figure(figsize=(12, 5))
-    upset_plot(df_upset, show_counts=True, fig=fig)
+    specs = upset.make_grid(fig)
+    specs["gs"].update(**box_upset)   # pin the internal grid to box_upset
 
-save_figure(fig, "upset_plot", "upset_plot")
+    shading_ax = fig.add_subplot(specs["shading"])
+    upset.plot_shading(shading_ax)
+    matrix_ax = fig.add_subplot(specs["matrix"], sharey=shading_ax)
+    upset.plot_matrix(matrix_ax)
+    totals_ax = fig.add_subplot(specs["totals"], sharey=matrix_ax)
+    upset.plot_totals(totals_ax)
+    intersections_ax = fig.add_subplot(specs["intersections"], sharex=matrix_ax)
+    upset.plot_intersections(intersections_ax)
+    fig.align_ylabels([intersections_ax])
+
+# Widen the left margin of the intersections/matrix x-axis a touch so the
+# tallest bar's count label doesn't collide with the y-axis spine
+xlim = intersections_ax.get_xlim()
+intersections_ax.set_xlim(xlim[0] - 0.5, xlim[1])
+
+# --- Panel B: Venn diagram, drawn directly into box_venn (no title) --------
+ax_venn = fig.add_axes([
+    box_venn["left"], box_venn["bottom"],
+    box_venn["right"] - box_venn["left"], box_venn["top"] - box_venn["bottom"],
+])
+venn_diagram(venn_sets, ax=ax_venn, fmt="{size}")
+
+# --- Panel letters, placed tight against each panel ------------------------
+letter_y = TOP + 0.010
+fig.text(
+    box_upset["left"] - 0.018, letter_y, "A",
+    fontsize=29, fontweight="bold", va="top", ha="left",
+)
+fig.text(
+    box_venn["left"] + 0.010, letter_y, "B",
+    fontsize=29, fontweight="bold", va="top", ha="left",
+)
+
+save_figure(fig, "overlap_abps", "upset_and_venn_plot")
 plt.close(fig)
 
 
