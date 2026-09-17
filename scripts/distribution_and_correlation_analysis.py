@@ -2,12 +2,14 @@
 distribution_and_correlation_analysis.py
 =========================================
 Analyses the distribution of physicochemical properties of ABPs and their
-correlation across and against non-AMPs, and produces an UpSet
-plot and a Venn diagram  for the database overlap of standard ABPs.
+correlation across and against non-AMPs.
 
 Also performs a detailed Bactericidal Permeability-Increasing protein (BPI)
 incidence analysis within AMPDB, motivated by the pressence of anomalous
 negatively charged peptides, and extends it to the other AMP databases.
+
+Also prints a table of the mean amino acid composition of the standard
+ABP subpopulation of each of the 5 AMP databases.
 
 Expected project layout (paths relative to project root):
     data/processed/complete_dataset.csv  -- output of annotate_dataset.py
@@ -20,7 +22,6 @@ Output figures (PNG + PDF) are written to:
       distributions_abps_vs_non_amps/
       net_charge_abps_vs_non_amps/
       correlation_heatmaps/
-      overlap_abps/
 
 Run from the project root:
     python scripts/distribution_and_correlation_analysis.py
@@ -34,8 +35,6 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy.stats import ks_2samp
-from upsetplot import UpSet
-from venn import venn as venn_diagram
 
 
 # ---------------------------------------------------------------------------
@@ -845,101 +844,33 @@ plt.close(fig)
 
 
 # ===========================================================================
-# Figure 7 – UpSet plot (A) + Venn diagram (B) of standard ABPs from
-# databases. Both panels encode the exact same five-set overlap; the Venn
-# diagram is a schematic (non-area-proportional) 5-ellipse layout.
+# Mean amino acid composition per database (standard ABPs)
 # ===========================================================================
 
-print("\n=== Figure 7: UpSet plot (A) + Venn diagram (B) ===")
+print("\n=== Mean amino acid composition per database (standard ABPs) ===")
 
-df_upset = complete_dataset[
-    complete_dataset["ABP_from_databases"] &
-    complete_dataset["Standard_sequence"]
-][["Sequence"]].copy()
+STANDARD_AAS = list("ACDEFGHIKLMNPQRSTVWY")
 
-# Boolean membership columns – use .loc to avoid chained-assignment issues
-for db in amp_databases:
-    col = f"{db}_ID"
-    df_upset[db] = complete_dataset.loc[df_upset.index, col].notna().values
 
-# Per-database sets of row identifiers for the Venn diagram
-venn_sets = {
-    db: set(df_upset.index[df_upset[db]])
-    for db in amp_databases
-}
+def mean_aa_composition(sequences: pd.Series) -> pd.Series:
+    """Mean per-sequence relative frequency (%) of each standard amino acid
+    across *sequences*: for every sequence, each amino acid's count is
+    divided by that sequence's length, then these relative frequencies are
+    averaged across all sequences (each sequence weighted equally)."""
+    lengths = sequences.str.len()
+    return pd.Series({
+        aa: (100 * sequences.str.count(aa) / lengths).mean()
+        for aa in STANDARD_AAS
+    })
 
-df_upset = df_upset.set_index(amp_databases)
 
-# ---------------------------------------------------------------------------
-# Both panels are built as native matplotlib axes placed by hand from
-# explicit figure-fraction bounding boxes
-# ---------------------------------------------------------------------------
+aa_composition = pd.DataFrame({
+    db: mean_aa_composition(dfs_abps[db]["Sequence"]) for db in amp_databases
+}).T[STANDARD_AAS]   # rows = database, columns = amino acids in canonical order
 
-FIG_W, FIG_H = 20, 7.0
-LEFT, RIGHT, TOP, BOTTOM = 0.033, 0.995, 0.95, 0.08
-GAP = 0.006   # figure-fraction gap between the two panels
-
-fig = plt.figure(figsize=(FIG_W, FIG_H))
-
-avail_h_in = (TOP - BOTTOM) * FIG_H
-venn_w_frac = avail_h_in / FIG_W     # square box in inches -> no letterboxing
-box_venn  = dict(left=RIGHT - venn_w_frac, right=RIGHT, bottom=BOTTOM, top=TOP)
-box_upset = dict(left=LEFT, right=box_venn["left"] - GAP, bottom=BOTTOM, top=TOP)
-
-# --- Panel A: UpSet plot, drawn directly into box_upset --------------------
-upset = UpSet(
-    df_upset,
-    show_counts=True,
-    orientation="horizontal",
-    element_size=None,   # fill whatever width/height it is given
-)
-
-# upsetplot calls fillna(..., inplace=True) internally; suppress the pandas
-# FutureWarning that originates inside the library (not fixable from user code)
-with warnings.catch_warnings():
-    warnings.filterwarnings(
-        "ignore",
-        category=FutureWarning,
-        message=".*inplace method.*",
-    )
-    specs = upset.make_grid(fig)
-    specs["gs"].update(**box_upset)   # pin the internal grid to box_upset
-
-    shading_ax = fig.add_subplot(specs["shading"])
-    upset.plot_shading(shading_ax)
-    matrix_ax = fig.add_subplot(specs["matrix"], sharey=shading_ax)
-    upset.plot_matrix(matrix_ax)
-    totals_ax = fig.add_subplot(specs["totals"], sharey=matrix_ax)
-    upset.plot_totals(totals_ax)
-    intersections_ax = fig.add_subplot(specs["intersections"], sharex=matrix_ax)
-    upset.plot_intersections(intersections_ax)
-    fig.align_ylabels([intersections_ax])
-
-# Widen the left margin of the intersections/matrix x-axis a touch so the
-# tallest bar's count label doesn't collide with the y-axis spine
-xlim = intersections_ax.get_xlim()
-intersections_ax.set_xlim(xlim[0] - 0.5, xlim[1])
-
-# --- Panel B: Venn diagram, drawn directly into box_venn (no title) --------
-ax_venn = fig.add_axes([
-    box_venn["left"], box_venn["bottom"],
-    box_venn["right"] - box_venn["left"], box_venn["top"] - box_venn["bottom"],
-])
-venn_diagram(venn_sets, ax=ax_venn, fmt="{size}")
-
-# --- Panel letters, placed tight against each panel ------------------------
-letter_y = TOP + 0.010
-fig.text(
-    box_upset["left"] - 0.018, letter_y, "A",
-    fontsize=29, fontweight="bold", va="top", ha="left",
-)
-fig.text(
-    box_venn["left"] + 0.010, letter_y, "B",
-    fontsize=29, fontweight="bold", va="top", ha="left",
-)
-
-save_figure(fig, "overlap_abps", "upset_and_venn_plot")
-plt.close(fig)
+print(f"\n  Mean relative frequency (%) of each amino acid, per database "
+      f"(standard ABPs, n = {len(STANDARD_AAS)} amino acids)")
+print(aa_composition.round(3).to_string())
 
 
 # ---------------------------------------------------------------------------

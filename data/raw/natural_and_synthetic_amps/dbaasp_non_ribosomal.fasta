@@ -1,0 +1,1602 @@
+> DBAASPN_1688 Gramicidin S, GS
+VXLfPVXLfP
+> DBAASPN_3314 Gratisin, GR
+VXLfPyVXLfPy
+> DBAASPN_3316 Tyrocidine A, TA
+fPFfNQYVXL
+> DBAASPN_4876 Trichogin GA IV
+XGLXGGLXGI
+> DBAASPN_5374 Baceridin
+aWLlVx
+> DBAASPN_5449 Gageostatin A
+ELLVDLL
+> DBAASPN_5450 Gageostatin B
+ELLVDLL
+> DBAASPN_5451 Gageostatin C
+ELLVDLL
+> DBAASPN_5507 Gageotetrin A
+EL
+> DBAASPN_5511 Gageotetrin B
+XLLL
+> DBAASPN_5514 Gageotetrin C
+ELLL
+> DBAASPN_5742 Champacyclin
+aIlfIIKx
+> DBAASPN_5779 PE1
+XIXfLXvLT
+> DBAASPN_5780 PE2
+XIXfLXvLT
+> DBAASPN_5942 Laterocidin
+LVXLyPFfND
+> DBAASPN_6090 Tyrocidine A1
+fPFfNQYVKL
+> DBAASPN_6091 Tyrocidine B
+fPWfNQYVXL
+> DBAASPN_6092 Tyrocidine B1
+fPWfNQYVKL
+> DBAASPN_6093 Tyrocidine C
+fPWwNQYVXL
+> DBAASPN_6094 Tyrocidine C1
+fPWwNQYVKL
+> DBAASPN_6306 Gramicidin A
+VGAlAvVvWlWlWlW
+> DBAASPN_6578 Verrucamide A
+XSVXGVXVXVXGIX
+> DBAASPN_6579 Verrucamide B
+XSVXGVXVXVXGIX
+> DBAASPN_6580 Verrucamide C
+XSVXGVXVXVXGVX
+> DBAASPN_6582 Verrucamide D
+XSVXGVXVXVXGVX
+> DBAASPN_6733 Cyclo(D-Tyr-D-Phe), Diketopiperazine (yf)
+yf
+> DBAASPN_6739 Cyclo(D-Pro-L-Leu), Diketopiperazine (pL)
+pL
+> DBAASPN_6740 Cyclo(Pro-Met), S.sp. DKP-MP
+PM
+> DBAASPN_6741 Cyclo(D-Pro-L-Phe), Diketopiperazine (pF)
+pF
+> DBAASPN_6742 Cyclo(Pro-Phe), Diketopiperazine (PF)
+PF
+> DBAASPN_6743 Cyclo(Pro-Tyr), Diketopiperazine (PY)
+PY
+> DBAASPN_6744 Cyclo(L-Pro-D-Tyr), Diketopiperazine (Py)
+Py
+> DBAASPN_6780 Hytramycin V
+XxLvXx
+> DBAASPN_6781 Hytramycin I
+XxLxXx
+> DBAASPN_6782 Ohmyungsamycin A
+XVTXVXVXXVXV
+> DBAASPN_6783 Ohmyungsamycin B
+VVTXVXVXXVXV
+> DBAASPN_6793 Cyclo(Pro-Trp), Diketopiperazine (PW)
+PW
+> DBAASPN_6794 Cyclo(Leu-Val), Diketopiperazine (LV)
+LV
+> DBAASPN_6795 Cyclo(D-Pro-D-Met), Diketopiperazine (pm)
+pm
+> DBAASPN_6796 Cyclo(D-Pro-D-Phe), Diketopiperazine (pf)
+pf
+> DBAASPN_6915 Phomafungin
+AXEGSnXX
+> DBAASPN_6917 Phaeofungin
+SadAssX
+> DBAASPN_7039 Cyclo(D-Pro-L-Met), Diketopiperazine (pM)
+pM
+> DBAASPN_7040 Cyclo(D-Pro-D-Tyr), Diketopiperazine (py)
+py
+> DBAASPN_7128 Cyclo(D-Tyr-L-Leu), Diketopiperazine (yL)
+yL
+> DBAASPN_7131 Cyclo(Trp-Pro), Diketopiperazine (WP)
+WP
+> DBAASPN_7132 Cyclo(Trp-Tyr), Diketopiperazine (WY)
+WY
+> DBAASPN_7133 Cyclo(Trp-Ile), Diketopiperazine (WI)
+WI
+> DBAASPN_7134 Cyclo(Trp-Leu), Diketopiperazine (WL)
+WL
+> DBAASPN_7135 Cyclo(Trp-Phe), Diketopiperazine (WF)
+WF
+> DBAASPN_7157 Desotamide A
+WLlXNG
+> DBAASPN_7158 Desotamide B
+WLlVNG
+> DBAASPN_7159 Desotamide E
+WLvXNG
+> DBAASPN_7160 Desotamide F
+WLxXNG
+> DBAASPN_7161 Wollamide A
+WLlXNx
+> DBAASPN_7162 Wollamide B
+WLlVNx
+> DBAASPN_7220 Paralysin beta-AY, Sarcophagine
+XY
+> DBAASPN_7237 Cyclic tetrapeptide 1
+pYPY
+> DBAASPN_7238 Cyclic tetrapeptide 2
+GFPY
+> DBAASPN_7738 Trichogin GA IV Ome
+XGLXGGLXGIL
+> DBAASPN_7739 Trichogin GA IV -OH
+XGLXGGLXGIL
+> DBAASPN_7740 Act Trichogin GA IV
+XGLXGGLXGI
+> DBAASPN_7855 Teixobactin
+xISqxIStAXI
+> DBAASPN_8005 Cephaibol A
+FXXXXGLXXXQXXXP
+> DBAASPN_8006 Cephaibol B
+FXXXXGLXXXQXXXP
+> DBAASPN_8007 Cephaibol E
+FXXXXGLXXXQXXXP
+> DBAASPN_8008 Heptaibin
+FXXXVGLXXXQXXX
+> DBAASPN_8009 Emerimicin IV
+FXXXVGLXXXQXXX
+> DBAASPN_8010 Pseudokonins KL III
+XNIIXPLLXP
+> DBAASPN_8011 Harzianin HK VI
+XNIIXPLLXP
+> DBAASPN_8012 Harzianin HC IX
+XNLXPAIXPXLXP
+> DBAASPN_8013 Trichorzianin TA VII
+XAAXXQXXXSLXPVXIQQ
+> DBAASPN_8014 Trichorzin PA VI
+XSAXXQXVXGLXPLXXQ
+> DBAASPN_8015 Saturnisporin SA IV
+XAXAXXQXLXGXXPVXXQQ
+> DBAASPN_8023 Alamethicin F50
+XPXAXAQXVXGLXPVXXQQ
+> DBAASPN_8024 Trichorzin PA II
+XSAXXQXVXGLXPLXXQ
+> DBAASPN_8025 Trichorzin PA IV
+XSAXXQXVXGLXPLXXQ
+> DBAASPN_8026 Trichorzin PA V
+XSAXXQXVXGLXPLXXQ
+> DBAASPN_8027 Trichorzin PA VIII
+XSAXXQXVXGLXPLXXQ
+> DBAASPN_8028 Trichorzin PA IX
+XSAXXQXVXGLXPLXXQ
+> DBAASPN_8037 Alamethicin F-30
+XPXAXAQXVXGLXPVXXEQ
+> DBAASPN_8073 
+LXlX
+> DBAASPN_8107 Cyclic peptide-1 Streptomyces sp. YIM67005
+YPFX
+> DBAASPN_8732 Battacin
+xXXLfXXL
+> DBAASPN_9454 Loloatin C
+VXLyPWfNDW
+> DBAASPN_9463 Loloatin D
+VXLyXFfNDW
+> DBAASPN_9464 Loloatin A
+VXLyPFfNDY
+> DBAASPN_9465 Loloatin B
+VXLyPFfNDW
+> DBAASPN_9849 Ecumicin
+VVXTXVXVXXVXV
+> DBAASPN_9851 Callyaerin A
+IXVILPPLXPIFG
+> DBAASPN_9852 Callyaerin B
+IXIILPPLXPII
+> DBAASPN_9853 Callyaerin C
+HXLLPPVXPLFG
+> DBAASPN_9854 Callyaerin E
+LPFFPPVXPIIG
+> DBAASPN_9855 Callyaerin F
+VPVFPXPLFI
+> DBAASPN_9856 Callyaerin D
+IIFPXPLXPINAI
+> DBAASPN_9862 Callyaerin H
+VPVFPPLXPI
+> DBAASPN_9863 Callyaerin G
+LPPPPLXPFFF
+> DBAASPN_10055 
+GSPE
+> DBAASPN_10056 
+GPE
+> DBAASPN_10057 Trichoderin A
+PXXXIVXX
+> DBAASPN_10058 Trichoderin A1
+PXXXIVXX
+> DBAASPN_10059 Trichoderin B
+PXXXVVXX
+> DBAASPN_10400 Aneurinifactin
+TYVSYT
+> DBAASPN_10401 Pontifactin
+SDVSS
+> DBAASPN_10510 Fusaricidin A
+XTvVxna
+> DBAASPN_10703 Bacteriocin ASP-1
+FTVAXFI
+> DBAASPN_10761 Trichopeptide A
+XaXI
+> DBAASPN_10762 Trichopeptides B
+XaX
+> DBAASPN_10893 Lysocin E
+TrSGxLrEqwIT
+> DBAASPN_11147 Desotamide A
+NGWLLI
+> DBAASPN_11148 Desotamide C
+XGNIlL
+> DBAASPN_11149 Desotamide D
+XGNIlL
+> DBAASPN_11189 WAP-8294A2, Lotilibcin 1
+SxSGxLxEnwxX
+> DBAASPN_11190 WAP-8294A2, Lotilibcin 2
+SnSGxLxEnwxX
+> DBAASPN_11206 Humimycin A
+YSyFtVV
+> DBAASPN_11207 Humimycin B
+YSyYtIV
+> DBAASPN_11226 Cordyheptapeptide A
+XFXILxP
+> DBAASPN_11240 Stylissamide G
+LIPFPFP
+> DBAASPN_11242 Cordyheptapeptide C
+XFXVLxP
+> DBAASPN_11243 Cordyheptapeptide D
+XFXVLxP
+> DBAASPN_11244 Cordyheptapeptide E
+XFXXLxP
+> DBAASPN_11246 Stylisin 2
+PIPFPPY
+> DBAASPN_11344 Fusaripeptide A
+XAaQyI
+> DBAASPN_11874 Simplicilliumtide A
+VxLX
+> DBAASPN_12151 Pentaminomycin A
+VvWXl
+> DBAASPN_12152 Pentaminomycin C
+LvWXf
+> DBAASPN_12153 Pentaminomycin B
+LvWXl
+> DBAASPN_12410 Pelgipeptin A
+XVXfLXvLS
+> DBAASPN_12411 Pelgipeptin B
+XIXfLXvLS
+> DBAASPN_12412 Pelgipeptin C
+XVXfLXvLS
+> DBAASPN_12413 Pelgipeptin D
+XIXfLXvLS
+> DBAASPN_12414 Pelgipeptin E
+XVXfLXvLS
+> DBAASPN_12421 Act-Gramicidin A-MEA
+VGAlAvVvWlWlWlW
+> DBAASPN_12422 MPA-Gramicidin A
+VGAlAvVvWlWlWlW
+> DBAASPN_12424 MPA-Gramicidin A-MEA
+VGAlAvVvWlWlWlW
+> DBAASPN_13304 Lugdunin
+CvWlVvV
+> DBAASPN_13432 Bacicyclin
+GLVIaf
+> DBAASPN_13433 
+PEPE
+> DBAASPN_13434 Cyclo(Gly-GABA)
+GX
+> DBAASPN_13435 Cyclo (trans-4-OH-Pro-Ala)
+AX
+> DBAASPN_13436 Cyclo (cis-4-OH-Pro-Ala)
+Ax
+> DBAASPN_13437 Stephensiolide D
+TsSvI
+> DBAASPN_13438 Cyclo(Gly-Pro) 
+GP
+> DBAASPN_13439 
+LPLP
+> DBAASPN_13440 
+FPFP
+> DBAASPN_13441 
+FPLP
+> DBAASPN_13443 
+FLFL
+> DBAASPN_13444 
+LILI
+> DBAASPN_13907 Bacaucin
+ELLSRVD
+> DBAASPN_14747 Tridecaptin M
+GxGswSXxIEIxS
+> DBAASPN_14748 Tridecaptin M2
+GxGswSXxIEVvS
+> DBAASPN_14749 Tridecaptin M5
+GxGsfSXxIEIvS
+> DBAASPN_14750 Tridecaptin M6
+GxGswSXxIEIvS
+> DBAASPN_14751 Tridecaptin M7
+GxGswSXxVEIxS
+> DBAASPN_14752 Tridecaptin M8
+GxGsfSXxIEIxS
+> DBAASPN_14764 Tridecaptin B1
+GxGswSXxIEVxA
+> DBAASPN_14823 Tridecaptin A1
+vxGswSXxFEVxA
+> DBAASPN_14861 Ilamycin B1, Rufomycin B1, Rufomycin I
+AXLXXXX
+> DBAASPN_14862 Ilamycin B2
+AXLXXXX
+> DBAASPN_14863 Ilamycin C
+AXLXXLX
+> DBAASPN_14864 Ilamycin D
+AXLXXXX
+> DBAASPN_14865 Ilamycin E
+AXLXXLX
+> DBAASPN_14866 Ilamycin F
+AXLXXXX
+> DBAASPN_14870 Cyclomarin A, CymA
+XXAXVXX
+> DBAASPN_15011 
+LELE
+> DBAASPN_15012 
+IEIE
+> DBAASPN_15013 
+VEVE
+> DBAASPN_15014 Provipeptide A
+PLpF
+> DBAASPN_15015 Provipeptide B
+PIPF
+> DBAASPN_15016 Cyclo(D-Val-D-Leu)
+vl
+> DBAASPN_15017 Cyclo(Pro-Leu), S.sp. DKP-PL, Gancidin W
+PL
+> DBAASPN_15099 
+LPIP
+> DBAASPN_15275 Surfactin
+ELlVDlL
+> DBAASPN_15677 Cyclosporin A
+XXXVXAaXXXX
+> DBAASPN_16177 Polymyxin B1
+XTXXXfLXXT
+> DBAASPN_16843 Polymyxin E1, Colistin A
+XTXXXlLXXT
+> DBAASPN_17106 Bacitracin A
+ICLeIKxIfHdN
+> DBAASPN_17107 Bacitracin D3, Bacitracin C1
+ICLeVKxVfHdN
+> DBAASPN_17108 Bacitracin B2, Unii-AM2V8lqg5X
+ICLeIKxVfHdN
+> DBAASPN_17109 Bacitracin B3, Bacitracin B1A
+ICLeVKxIfHdN
+> DBAASPN_17113 Viomycin, Celiomycin
+XXSSXX
+> DBAASPN_17205 Griselimycin, GM
+XXXLXLXPxG
+> DBAASPN_17206 Griselimycin MGM
+XXXLXLXXxG
+> DBAASPN_17207 Griselimycin CGM
+XXXLXLXXxG
+> DBAASPN_17213 Rufomycin-1, Rufomycin III, Rufomycin A
+XXXAXLX
+> DBAASPN_17809 Pseudofactin II, PFII
+GSTLLSLL
+> DBAASPN_18206 Brevicidine B
+nfwxXGxWTIGS
+> DBAASPN_18207 Brevicidine
+nywxXGxWTIGS
+> DBAASPN_18208 Laterocidine
+sywxXGxWTINGG
+> DBAASPN_18305 Pagoamide A
+VCGCSTSafvF
+> DBAASPN_18368 Gramicidin D
+VGAlAvVvWlWlWlWG
+> DBAASPN_18405 Apicidin
+XXIx
+> DBAASPN_18406 Apicidin A
+XWIx
+> DBAASPN_18407 HC-toxin
+XpAa
+> DBAASPN_18408 Apicidin C
+XXVx
+> DBAASPN_18409 Apicidin D1
+XXIx
+> DBAASPN_18410 Apicidin B
+XXIp
+> DBAASPN_18415 Phakellistatin 16
+PFDSRAVTY
+> DBAASPN_18416 Phakellistatin 15
+PWIPLTPL
+> DBAASPN_18417 Phakellistatin 17
+PWVPLIPI
+> DBAASPN_18418 Phakellistatin 18
+PYPIFPI
+> DBAASPN_18419 Phakellistatin 19, Stylissamide X
+IPWFPLTP
+> DBAASPN_18420 Phakellistatin 8
+IFVLPPYIPP
+> DBAASPN_18421 Phakellistatin 20
+PFNAXAI
+> DBAASPN_18422 Phakellistatin 21
+PPXFELPPYI
+> DBAASPN_18423 Phakellistatin 2
+IxPYPFP
+> DBAASPN_18424 Phakellistatin 4
+PtPfiFS
+> DBAASPN_18425 Phakellistatin 9
+lPPYvPPXfv
+> DBAASPN_18426 Phakellistatin 11
+QPFPfifp
+> DBAASPN_18427 Hymenamide D
+aIpyDPL
+> DBAASPN_18428 Cyclonellin
+ANPRYPYT
+> DBAASPN_18429 Carteritin A
+EYPFIPP
+> DBAASPN_18430 Carteritin B
+LYPYYPS
+> DBAASPN_18431 Hymenamide C
+ELWPFGP
+> DBAASPN_18434 Apicidin F
+XXFx
+> DBAASPN_18435 Kahalalide F
+vTVvpXxxxvFXV
+> DBAASPN_18443 Bogorol A
+XLxIVVkVlKyL
+> DBAASPN_18444 Bogorol B
+XVxVVVkVlKyL
+> DBAASPN_18445 Bogorol C
+XVXIVVKVLKYL
+> DBAASPN_18446 Bogorol D
+XMXIVVKVLKYL
+> DBAASPN_18447 Bogorol E
+XXxIVVkVlKyL
+> DBAASPN_18448 Tauramamide
+ySlWR
+> DBAASPN_18449 Sclerotide B
+XsfATX
+> DBAASPN_18450 Alternaramide
+fPfP
+> DBAASPN_18451 Sclerotiotide A
+XVX
+> DBAASPN_18452 Sclerotiotide B
+XXX
+> DBAASPN_18453 Sclerotiotide F
+XXX
+> DBAASPN_18454 Sclerotiotide I
+XXX
+> DBAASPN_18455 JBIR-15
+XXA
+> DBAASPN_18456 Arenamide A
+GVLAF
+> DBAASPN_18457 Arenamide B
+GVLAF
+> DBAASPN_18458 Ohmyungsamycin A
+XVTXVXVXXVXV
+> DBAASPN_18459 Ohmyungsamycin B
+VVTXVXVXXVXV
+> DBAASPN_18460 Apratoxin A
+XXXP
+> DBAASPN_18461 Tasiamide
+LXIGxP
+> DBAASPN_18466 Similanamide
+XxXAlV
+> DBAASPN_18467 Asperterrestide A
+Xaix
+> DBAASPN_18470 Zygosporamide
+FlLF
+> DBAASPN_18471 Halolitoralin A
+ALALAI
+> DBAASPN_18472 Halolitoralin C
+ILIV
+> DBAASPN_18473 Mojavensin A
+XNynQPnN
+> DBAASPN_18474 Cyclo(Leu-Leu), Gordonia Dipeptide
+LL
+> DBAASPN_18475 Iturin D
+XNynQPnS
+> DBAASPN_18476 Iturin V
+DYDVPDS
+> DBAASPN_18477 Iturin-like lipopeptide
+DDHSAGT
+> DBAASPN_18478 Bogorol-like lipopeptide
+XYXIVVKVLDVE
+> DBAASPN_18479 Aurilide B
+VXXVX
+> DBAASPN_18480 Aurilide C
+VXXVX
+> DBAASPN_18481 Belamide A
+VXX
+> DBAASPN_18482 Dragonamide C
+XXXX
+> DBAASPN_18483 Dragonamide D
+XXXX
+> DBAASPN_18484 Itralamide A
+XXaXxA
+> DBAASPN_18485 Itralamide B
+XXvXxV
+> DBAASPN_18487 Microcolin B
+XXXP
+> DBAASPN_18488 Microcolin A
+XXXX
+> DBAASPN_18489 Desacetylmicrocolin B
+XTXP
+> DBAASPN_18492 1962A
+GVYGl
+> DBAASPN_18496 Microsporin A
+XAFx
+> DBAASPN_18497 Microsporin B
+XAFx
+> DBAASPN_18498 Cotteslosin A
+PVVXY
+> DBAASPN_18499 Versicotide A
+XXXAX
+> DBAASPN_18500 Versicotide B
+XAXXX
+> DBAASPN_18501 Rolloamide A
+IFPVPLP
+> DBAASPN_18502 Euryjanicin B
+ATPFVPP
+> DBAASPN_18503 Euryjanicin C
+LFPXSXP
+> DBAASPN_18504 Euryjanicin D
+FPXFSPX
+> DBAASPN_18505 Euryjanicin A
+WPISFVP
+> DBAASPN_18506 Dominicin
+IIILPPXP
+> DBAASPN_18507 Stylopeptide 2
+LLPFPYPTPF
+> DBAASPN_18508 Stylopeptide 1
+IFSPIPL
+> DBAASPN_18509 Bisebromoamide
+AXXClX
+> DBAASPN_18514 Gageopeptide A
+LELL
+> DBAASPN_18515 Gageopeptide B
+XLLL
+> DBAASPN_18516 Gageopeptide C
+LELL
+> DBAASPN_18517 Gageopeptide D
+LELL
+> DBAASPN_18518 Kurahyne
+XXXXP
+> DBAASPN_18527 Clavatustide A
+XXX
+> DBAASPN_18528 Clavatustide B
+XXX
+> DBAASPN_18529 Koshikamide A2
+fXXXXXNfPPR
+> DBAASPN_18530 Penilumamide B
+MX
+> DBAASPN_18531 Penilumamide A
+XX
+> DBAASPN_18532 Penilumamide C
+XX
+> DBAASPN_18533 Penilumamide D
+AX
+> DBAASPN_18534 Asperpeptide A
+AAPXY
+> DBAASPN_18535 Globomycin
+XXSXG
+> DBAASPN_18536 Fengycin
+ExYxEaPQyI
+> DBAASPN_18537 Iturin A
+XNynQPnS
+> DBAASPN_18539 Mycosubtilin
+XNynQPsN
+> DBAASPN_18544 Mycosubtilin (anteiso-C17)
+XNynQPsN
+> DBAASPN_18554 Cyclo(D-Pro-D-Val), Diketopiperazine (pv)
+pv
+> DBAASPN_18555 Cyclo(D-Pro-D-Ile), Diketopiperazine (pi)
+pi
+> DBAASPN_18556 Cyclo(D-Pro-D-Leu), Diketopiperazine (pl)
+pl
+> DBAASPN_18557 Cyclo (trans-4-OH-Pro-Phe)
+xf
+> DBAASPN_18558 Chrysogeamide A
+GVlAV
+> DBAASPN_18559 Chrysogeamide B
+GVlAV
+> DBAASPN_18560 Nodupetide
+GVlAV
+> DBAASPN_18561 Scopularide A
+GVlAF
+> DBAASPN_18562 Scopularide B
+GVlAF
+> DBAASPN_18563 Oryzamide A
+GVlAL
+> DBAASPN_18564 Oryzamide B
+GVlAY
+> DBAASPN_18565 Oryzamide C
+GVlAM
+> DBAASPN_18566 Emericellamide A
+GVLAA
+> DBAASPN_18567 Emericellamide B
+GVLAA
+> DBAASPN_18568 Isaridin G
+PYXXX
+> DBAASPN_18569 Desmethylisaridin C1
+PFXLX
+> DBAASPN_18570 Desmethylisaridin G
+PYXLX
+> DBAASPN_18571 Isaridin A
+PFXXX
+> DBAASPN_18572 Isaridin B
+XFXXX
+> DBAASPN_18573 Isaridin E
+PFXXX
+> DBAASPN_18594 Scytalidamide A
+XFXFLPX
+> DBAASPN_18595 Scytalidamide B
+XFXFLXX
+> DBAASPN_18596 Friulimicin B
+NXxXDGDGxVP
+> DBAASPN_18667 Macolacin
+XTsXXlIXXL
+> DBAASPN_18698 Polymyxin B2
+XTXXXfLXXT
+> DBAASPN_18699 Polymyxin B3
+XTXXXfLXXT
+> DBAASPN_18700 Polymyxin B4
+XTXXXfLXXT
+> DBAASPN_18701 Polymyxin B5
+XTXXXfLXXT
+> DBAASPN_18702 polymyxin Ile-B1, Polymyxin II
+XTXXXfIXXT
+> DBAASPN_18703 Polymyxin E2, Colistin b
+XTXXXlLXXT
+> DBAASPN_18705 Polymyxin E3
+XTXXXlLXXT
+> DBAASPN_18706 Polymyxin E4
+XTXXXlLXXT
+> DBAASPN_18708 Polymyxin E7
+XTXXXlLXXT
+> DBAASPN_18711 Polymyxin E1-Ile, Colistin III
+XTXXXlIXXT
+> DBAASPN_18712 Polymyxin E1-Nva
+XTXXXlXXXT
+> DBAASPN_18713 Polymyxin E1-Val
+XTXXXlVXXT
+> DBAASPN_18714 Polymyxin E2-Ile
+XTXXXlIXXT
+> DBAASPN_18715 Polymyxin E2-Nva
+XTXXXlXXXT
+> DBAASPN_18716 Polymyxin E2-Val
+XTXXXlVXXT
+> DBAASPN_18717 Polymyxin A1
+XTxXXlTXXT
+> DBAASPN_18718 Polymyxin A2
+XTxXXlTXXT
+> DBAASPN_18719 Polymyxin M1
+XTXXXlTXXT
+> DBAASPN_18720 Polymyxin M2
+XTXXXlTXXT
+> DBAASPN_18721 Polymyxin D1
+XTsXXlTXXT
+> DBAASPN_18722 Polymyxin D2
+XTsXXlTXXT
+> DBAASPN_18723 Polymyxin S1
+XTsXXfTXXT
+> DBAASPN_18724 Polymyxin S2
+XTsXXfTXXT
+> DBAASPN_18725 Polymyxin T1
+XTXXXfLXXL
+> DBAASPN_18726 Polymyxin T2
+XTXXXfLXXL
+> DBAASPN_18738 Psychrophilin E
+WPX
+> DBAASPN_18861 Cyclo(Trp-Trp), Diketopiperazine (WW)
+WW
+> DBAASPN_18873 Cyclo(Ser-Pro), Diketopiperazine (SP)
+SP
+> DBAASPN_18879 Cyclo(L-Pro-D-Arg), Diketopiperazine (Pr)
+Pr
+> DBAASPN_18882 Cyclo(D-Pro-L-Tyr), Diketopiperazine (pY)
+pY
+> DBAASPN_18886 Cyclo(D-Leu-D-Arg), Diketopiperazine (lr)
+lr
+> DBAASPN_18887 Cyclo(Trp-Arg), Diketopiperazine (WR)
+WR
+> DBAASPN_18888 Cyclo(D-Trp-D-Arg), Diketopiperazine (wr)
+wr
+> DBAASPN_18890 Cyclo (trans-4-OH-Pro-Leu), Cordysinin A
+LX
+> DBAASPN_18891 Cyclo(L-Phe-L-Hyp)
+FX
+> DBAASPN_18892 Cyclo(Pro-Val)
+PV
+> DBAASPN_18894 Cyclo(L-Pro-D-Leu)
+Pl
+> DBAASPN_18895 Cyclo (cis-4-OH-Pro-Leu)
+XL
+> DBAASPN_18896 Cyclo(Pro-Pro)
+PP
+> DBAASPN_18897 Saccharopolytide A
+LXFX
+> DBAASPN_18898 Cyclo (trans-4-OH-Pro-Ile)
+xi
+> DBAASPN_18899 Cyclo(Phe-ethyl-Glu)
+FX
+> DBAASPN_18900 Cyclo(Phe-Val), Diketopiperazine (FV)
+FV
+> DBAASPN_18958 Cyclo(Pro-Ala)
+PA
+> DBAASPN_18961 Cyclo(Trp-Ser)
+WS
+> DBAASPN_18978 Cyclo(Phe-Gly)
+FG
+> DBAASPN_18979 Cyclo(L-Pro-D-Ile)
+Pi
+> DBAASPN_18982 Cyclo(Trp-Pro-Phe), Epicotripeptin
+WPF
+> DBAASPN_18983 Cyclo(Pro-Ile)
+PI
+> DBAASPN_18994 Brevibacillin 2V
+XLXVVVKVVKYL
+> DBAASPN_18995 Brevibacillin I
+XLXIIVKIVKYL
+> DBAASPN_18996 Brevibacillin
+XLXIIVKVVKYL
+> DBAASPN_18997 Brevibacillin V
+XLXIVVKVVKYL
+> DBAASPN_18999 Xylapeptide B
+LPXVa
+> DBAASPN_19000 Xylapeptide A
+LXXVa
+> DBAASPN_19027 Fengycin B2
+ExytEVPQYV
+> DBAASPN_19028 Paenibacterin
+KVTXSVKSIPVKI
+> DBAASPN_19066 Syringopeptin SP508 A
+XPVLAALVAAVAAXXSAXAXXY
+> DBAASPN_19067 Syringopeptin SP508 B
+XPVLAALVAAVAAXXSAXAXXY
+> DBAASPN_19068 Syringopeptin SP22 A
+XpvVaavvXavAaXxsaXAXxY
+> DBAASPN_19069 Syringopeptin SP22 B
+XpvVaavvXavAaXxsaXAXxY
+> DBAASPN_19074 Cyclo(L-Ala-D-Pro)
+Ap
+> DBAASPN_19075 Cyclo (Ser-trans-4-OH-Pro)
+SX
+> DBAASPN_19077 Cyclo(L-Phe-D-Hyp)
+Fx
+> DBAASPN_19078 Cyclo (Pro-trans-4-OH-Pro)
+XP
+> DBAASPN_19079 Cyclo(Ala-Gly)
+AG
+> DBAASPN_19080 Cyclo (Pro-trans-4-OH-Pro)
+Px
+> DBAASPN_19081 Cyclo(L-Pro-D-Glu)
+Pe
+> DBAASPN_19082 Cyclo(D-Pro-D-Glu)
+pe
+> DBAASPN_19083 Cyclo(L-Pro-D-allo-Thr)
+Px
+> DBAASPN_19084 Cyclo(Pro-Asp)
+PD
+> DBAASPN_19085 Cyclo(D-Pro-Gly)
+pG
+> DBAASPN_19086 Cyclo(L-Pro-D-Ala)
+Pa
+> DBAASPN_19087 Cyclo(D-Pro-L-Val)
+pV
+> DBAASPN_19088 Cyclo(D-Pro-L-Ile)
+pI
+> DBAASPN_19089 Cyclo(L-Pro-D-Val)
+Pv
+> DBAASPN_19090 Cyclo(D-Leu-D-His)
+lh
+> DBAASPN_19091 Brevilaterin A
+XVXVVVKVLKYL
+> DBAASPN_19092 Brevilaterin B
+XMXIVVKVLKYL
+> DBAASPN_19093 Brevilaterin C
+XVXIVVKVLKYL
+> DBAASPN_19094 Brevilaterin D
+XVXIVIKVLKYL
+> DBAASPN_19095 Brevilaterin E
+XLXIVVKVLKYL
+> DBAASPN_19099 Brevilaterin V1
+XXVXVVVKVLKYL
+> DBAASPN_19100 Brevilaterin V2
+XVXVVVKVLKYL
+> DBAASPN_19101 Brevilaterin V4
+XVKVVVKVLKYL
+> DBAASPN_19102 Brevilaterin V5
+XVXIVVKVLKYL
+> DBAASPN_19167 Colisporifungin
+QTXwSf
+> DBAASPN_19168 Cavinafungin A
+TXVXA
+> DBAASPN_19169 Cavinafungin B
+TXVXA
+> DBAASPN_19170 Fellutamide C
+NX
+> DBAASPN_19171 Fellutamide D
+NX
+> DBAASPN_19172 Fellutamide B
+NQ
+> DBAASPN_19174 Fellutamide F
+NQ
+> DBAASPN_19208 Burkholdine-1097
+XsxnGNSX
+> DBAASPN_19209 Burkholdine-1229
+XsxnGNSX
+> DBAASPN_19210 Burkholdine-1215
+XsxxGNSX
+> DBAASPN_19211 Burkholdine-1119
+XsxxGNSN
+> DBAASPN_19212 Burkholdine-1213
+XsxnGNSN
+> DBAASPN_19219 Feglymycin
+xxVxXxXxVxXFD
+> DBAASPN_19241 Cyclo(Tyr-3-I-Tyr)
+YX
+> DBAASPN_19546 Massetolide A
+LexiLsLsI
+> DBAASPN_19547 Viscosin
+LexvLsLsI
+> DBAASPN_19548 Hirsutatin A
+FXTS
+> DBAASPN_19549 Hirsutatin B
+XXTS
+> DBAASPN_19717 Pumilacidin
+ELlLDlI
+> DBAASPN_19720 Pseudodesmin B
+LqxvlsLsV
+> DBAASPN_19735 Cordycommunin
+XAAQYV
+> DBAASPN_19772 Stephensiolide C
+TsSvV
+> DBAASPN_19774 Kahalalide A
+ftlfLxS
+> DBAASPN_19808 Relacidine A
+SYWXXGXWTIGSG
+> DBAASPN_19809 Relacidine B
+SYWXXGXWTIGSA
+> DBAASPN_19822 Tolaasin D
+XpSLvslvVqLvXxLXxK
+> DBAASPN_19823 Tolaasin E
+XpSLvslvVqLvXxLGxK
+> DBAASPN_19824 White Line Inducing Principle [WLIP]
+LexvlsLsI
+> DBAASPN_19893 Stephensiolide U
+TsSiI
+> DBAASPN_19894 Stephensiolide K
+TsSiI
+> DBAASPN_19930 Stephensiolide F
+TsSvI
+> DBAASPN_19931 Stephensiolide I
+TsSvI
+> DBAASPN_19932 Stephensiolide G
+TsSvV
+> DBAASPN_20046 Galaxamide
+XLLXL
+> DBAASPN_20053 Sansalvamide A
+VLFL
+> DBAASPN_20095 Stereocalpin A
+FX
+> DBAASPN_20466 Penicillin G
+Cv
+> DBAASPN_20467 Cephalosporin C
+xCX
+> DBAASPN_20468 Penicillin N, Cephalosporin N, Adicillin
+xCv
+> DBAASPN_20644 Phakellistatin 1
+IFPYPIP
+> DBAASPN_20648 Phakellistatin 10
+IPYVPLTP
+> DBAASPN_20817 MDN-0066
+LexllsLI
+> DBAASPN_20828 PAX 1
+GKKKKKK
+> DBAASPN_20829 PAX 2
+GRKKKKK
+> DBAASPN_20830 PAX 3
+GKKKKKK
+> DBAASPN_20831 PAX 4
+GRKKKKK
+> DBAASPN_20832 Ulleungmycin A
+xXvxXX
+> DBAASPN_20833 Ulleungmycin B
+xXvlXX
+> DBAASPN_20851 Arthropeptide A
+XLPY
+> DBAASPN_20852 Androsamide
+IXXT
+> DBAASPN_20857 Telomycin A
+DSTXAGXXXXX
+> DBAASPN_20858 Telomycin B
+DSTXAGXXXXP
+> DBAASPN_20859 Telomycin C
+DSTXAGPXXXP
+> DBAASPN_20860 Telomycin D
+DSTXAGPXXXX
+> DBAASPN_20861 Telomycin E
+DSTXAGPWXXP
+> DBAASPN_20862 Telomycin F
+DSTXAGPXXLP
+> DBAASPN_20863 Telomycin G
+DSTXAGPWXLP
+> DBAASPN_20864 Di-5-hydroxytryptophan Telomycin
+DSTXAGXXXXX
+> DBAASPN_20865 Di-5-methyltryptophan Telomycin
+DSTXAGXXXXX
+> DBAASPN_20866 Di-5-methoxytryptophan Telomycin
+DSTXAGXXXXX
+> DBAASPN_20880 Linear Telomycin F
+DSTXAGPXXLP
+> DBAASPN_20881 Linear Telomycin C
+DSTXAGPXXXP
+> DBAASPN_20882 Telomycin (2-11)
+DSTXAGPXXLP
+> DBAASPN_20886 Ambobactin
+DSTXAGXXxXX
+> DBAASPN_20891 Malacidin A
+DXvKXDGxVX
+> DBAASPN_20892 Malacidin B
+DXvKXDGxVX
+> DBAASPN_20896 Octapeptin C4
+xXXfLXXL
+> DBAASPN_20906 Sevadicin
+faW
+> DBAASPN_20907 Methicillin
+Cv
+> DBAASPN_20908 Daptomycin, Cubicin, Cidecin
+WnDTGXDaDGsXX
+> DBAASPN_20909 Laspartomycin C
+DXXGDGDGTXP
+> DBAASPN_20911 Taromycin A
+XnDTGXDaDGaXX
+> DBAASPN_20912 Taromycin B
+XnDTGXDaDGaXX
+> DBAASPN_20919 Cadaside A
+XGeYTiDXPGeXX
+> DBAASPN_20920 Cadaside B
+XGeYTiDXPGeXX
+> DBAASPN_20921 A-54145B
+WeXTXADkXGnXI
+> DBAASPN_20922 
+PFXXxX
+> DBAASPN_20923 
+PFIXxX
+> DBAASPN_20924 Viscosinamide A, Pseudodesmin A
+LqxvlsLsI
+> DBAASPN_20925 Rhodopeptin B5
+GKVX
+> DBAASPN_20926 Rhodopeptin C3
+GXVx
+> DBAASPN_20968 Streptocidin A
+VOLfPLyNQW
+> DBAASPN_20969 Streptocidin B
+VOLfPLwNQW
+> DBAASPN_20970 Streptocidin C
+VOLfPLwNQw
+> DBAASPN_20971 Streptocidin D
+VOLfPLwNQF
+> DBAASPN_20972 Wainunuamide
+FPHPPGL
+> DBAASPN_20974 Ogipeptin A
+XXXXXLR
+> DBAASPN_20975 Ogipeptin B
+XXXXXLR
+> DBAASPN_20976 Ogipeptin C
+XXXXXLR
+> DBAASPN_20977 Ogipeptin D
+XXXXXLR
+> DBAASPN_20988 Arylomycin A2
+xaGXAY
+> DBAASPN_20991 Arylomycin C16
+xaGXAY
+> DBAASPN_20992 Arylomycin A1
+xaGXAY
+> DBAASPN_20993 Arylomycin A3
+xaGXAY
+> DBAASPN_20994 Arylomycin A4
+xaGXAY
+> DBAASPN_20995 Arylomycin A5
+xaGXAY
+> DBAASPN_20996 Arylomycin B1
+xaGXAX
+> DBAASPN_20997 Arylomycin B2
+xaGXAX
+> DBAASPN_20998 Arylomycin B3
+xaGXAX
+> DBAASPN_20999 Arylomycin B4
+xaGXAX
+> DBAASPN_21001 Arylomycin B7
+xaGXAX
+> DBAASPN_21013 Bacillomycin D(iso-C15)
+NynPEsTx
+> DBAASPN_21014 Bacillomycin D(iso-C16)
+NynPEsTx
+> DBAASPN_21015 Bacillomycin D(anteiso-C17)
+NynPEsTx
+> DBAASPN_21016 Haligramide A
+MPPMPFC
+> DBAASPN_21017 Haligramide B
+XPPMPFC
+> DBAASPN_21048 
+PpYY
+> DBAASPN_21125 Gymnopeptide A
+AXAXSXVXVXAXVXXXVX
+> DBAASPN_21126 Gymnopeptide B
+AXAXTXVXVXAXVXXXVX
+> DBAASPN_21128 Callypeptide A
+YXIFYLAT
+> DBAASPN_21132 Clovibactin
+FlkSxALL
+> DBAASPN_21134 
+LLlLI
+> DBAASPN_21135 
+LLlLV
+> DBAASPN_21136 
+LLlLL
+> DBAASPN_21137 Fusaristatin A
+XXQ
+> DBAASPN_21143 Iturin-like peptide Mixirin A
+XNyNQSNp
+> DBAASPN_21146 Fusaristatin C
+XXS
+> DBAASPN_21150 Malformin E
+LVICC
+> DBAASPN_21151 Malformin A1
+ccVlI
+> DBAASPN_21152 Pseudoxylallemycin A
+XFXF
+> DBAASPN_21153 Aspergillipeptide D
+PXXxV
+> DBAASPN_21154 MBJ-0174
+rvLvY
+> DBAASPN_21155 MBJ-0173
+lrlFXw
+> DBAASPN_21156 Sartoryglabramide A
+XPFF
+> DBAASPN_21157 Sartoryglabramide B
+XPFW
+> DBAASPN_21158 Penitropeptide
+GFPPWL
+> DBAASPN_21159 Talarolide A
+xaxXAxX
+> DBAASPN_21160 Simplicilliumtide J
+xaPQyX
+> DBAASPN_21167 Gliotoxin
+XX
+> DBAASPN_21168 Reduced Gliotoxin
+XX
+> DBAASPN_21258 Chrysospermin B
+FXSXXLQGXXAAXPXXXQ
+> DBAASPN_21259 Chrysospermin D
+FXSXXLQGXXAAXPXXXQ
+> DBAASPN_21260 Peptavirin A
+FXAXXLQGXXAAXPXXXQ
+> DBAASPN_21261 Peptavirin B
+FXSXXLQGXXAAXPXXXQ
+> DBAASPN_21262 Ampullosporin F
+WAXXLXQXXXXLXQ
+> DBAASPN_21263 Ampullosporin G
+WAXXLXXXXXQLXQ
+> DBAASPN_21264 Ampullosporin A
+WAXXLXQXXXQLXQ
+> DBAASPN_21265 Emericellipsin A
+XXAXIXX
+> DBAASPN_21286 Westertide A
+XxVI
+> DBAASPN_21287 Westertide B
+XxTI
+> DBAASPN_21288 Callyptide A
+TALYFIXY
+> DBAASPN_21326 Aspartocin D
+DXXXDGDGXVP
+> DBAASPN_21327 Aspartocin E
+DXXXDGDGXVP
+> DBAASPN_21328 Amphomycin
+DXxXDGDGxVP
+> DBAASPN_21329 Tsushimycin
+DXxXDGDGxVP
+> DBAASPN_21360 Anikasin
+LDxlLsLsLId
+> DBAASPN_21361 Medipeptin A
+XPAAAVVXTVIXGAAVXTAXSI
+> DBAASPN_21362 Tensin, Milkisin C
+ldxllsLqLIE
+> DBAASPN_21363 Circulocin alpha
+XTfIXD
+> DBAASPN_21364 Circulocin beta
+XTfIXD
+> DBAASPN_21365 Circulocin gamma
+XTlIxna
+> DBAASPN_21366 Tripropeptin C
+xpPRXSXx
+> DBAASPN_21367 Tripropeptin A
+xpPRXSXx
+> DBAASPN_21368 Tripropeptin B
+xpPRXSXx
+> DBAASPN_21369 Tripropeptin D
+xpPRXSXx
+> DBAASPN_21370 Tripropeptin Z
+xpPRXSXx
+> DBAASPN_21393 Cormycin A
+SxNxHXXXX
+> DBAASPN_21405 Pseudomycin A
+SxDKXXXXX
+> DBAASPN_21406 Syringomycin E
+SSXXRFXxX
+> DBAASPN_21407 Syringotoxin B
+SXGXXTXXX
+> DBAASPN_21408 Syringostatin A
+SXXXXTXXX
+> DBAASPN_21414 Bacilotetrin A
+LLLE
+> DBAASPN_21415 Bacilotetrin B
+LLLE
+> DBAASPN_21416 Bacilotetrin C
+ELlL
+> DBAASPN_21417 Isopedopeptin A
+XLXXTXfXD
+> DBAASPN_21419 Isopedopeptin D
+XLXXTXfVD
+> DBAASPN_21420 Isopedopeptin E
+XLXXTXfVD
+> DBAASPN_21421 Isopedopeptin F
+XLXXTXfXD
+> DBAASPN_21422 Isopedopeptin G
+XLXXTXfVD
+> DBAASPN_21423 Isopedopeptin H
+XLXXTXfVD
+> DBAASPN_21424 Isopedopeptin C
+XLXXTXfXD
+> DBAASPN_21495 Arthroamide
+VaVV
+> DBAASPN_21496 Turnagainolide A
+VaIV
+> DBAASPN_21506 Putisolvin I
+LELIQSVISLVS
+> DBAASPN_21507 Pseudophomin B
+LexxlsLsI
+> DBAASPN_21508 Cystargamide B
+TFEXxG
+> DBAASPN_21546 Mactanamide
+XX
+> DBAASPN_21547 14-hydroxy-cyclopeptine
+XX
+> DBAASPN_21559 WBP-29479A1
+VrSGxLrEvwX
+> DBAASPN_21582 Asterripeptide A
+PfI
+> DBAASPN_21583 Asterripeptide B
+PfL
+> DBAASPN_21584 Asterripeptide C
+PfV
+> DBAASPN_21588 Gageopeptin A
+EVLADLL
+> DBAASPN_21589 Gageopeptin B
+EVLADLL
+> DBAASPN_21590 RHM1
+qIXIXXXX
+> DBAASPN_21591 Trichorzin HA-7
+XGAXXQVVXGLXPLXXQ
+> DBAASPN_21592 Harzianin HC III
+XNLXPSVXPxLXP
+> DBAASPN_21593 Trikoningin KB-I
+XGVXGGVXGI
+> DBAASPN_21594 Acremolide A
+fP
+> DBAASPN_21595 Acremolide B
+fP
+> DBAASPN_21596 Acremolide C
+iP
+> DBAASPN_21597 Acremolide D
+vP
+> DBAASPN_21601 Tolybyssidin A
+XVXTVVPRlTIIF
+> DBAASPN_21602 Tolybyssidin B
+XRYMVTITVVVFV
+> DBAASPN_21603 Talaropeptide A
+XXVTXPXXXXL
+> DBAASPN_21604 Talaropeptide B
+XXVTVXPXXXXL
+> DBAASPN_21605 Talaropeptide C
+XXVTXPXXXXL
+> DBAASPN_21606 Talaropeptide D
+XXVTVXPXXXXL
+> DBAASPN_21607 Minutissamide A
+XVXNXNATXP
+> DBAASPN_21608 Puwainaphycin F
+XVXNXNAtXP
+> DBAASPN_21610 Kolossin A
+lAlVyLvxVlVxLvV
+> DBAASPN_21625 Kailuin E
+lSTlI
+> DBAASPN_21626 Serratiomycin
+LSXfi
+> DBAASPN_21630 Pargamicin A
+XfXxXx
+> DBAASPN_21631 Pargamicin B
+XfXxXx
+> DBAASPN_21632 Pargamicin C
+XfXxXx
+> DBAASPN_21633 Pargamicin D
+XfXxXx
+> DBAASPN_21634 Vancomycin
+xxNxxXX
+> DBAASPN_21635 Natalenamide A
+EFV
+> DBAASPN_21636 Natalenamide B
+EFL
+> DBAASPN_21637 Natalenamide C
+EFF
+> DBAASPN_21664 Simplicilliumtide B
+XxVX
+> DBAASPN_21665 Simplicilliumtide C
+XxL
+> DBAASPN_21666 Simplicilliumtide D
+XxL
+> DBAASPN_21667 Simplicilliumtide E
+XxL
+> DBAASPN_21668 Simplicilliumtide F
+VxL
+> DBAASPN_21669 Simplicilliumtide G
+Xx
+> DBAASPN_21670 Simplicilliumtide H
+Xx
+> DBAASPN_21675 Isaridin I
+PFXXX
+> DBAASPN_21676 Isaridin J
+PYXXX
+> DBAASPN_21677 Isaridin L
+PFXXX
+> DBAASPN_21678 Isaridin M
+PFXXX
+> DBAASPN_21679 Homoserine lactone
+X
+> DBAASPN_21680 Homoserine lactone
+X
+> DBAASPN_21681 Homoserine lactone
+X
+> DBAASPN_21682 Homoserine lactone
+X
+> DBAASPN_21683 Homoserine lactone
+X
+> DBAASPN_21685 
+AXYPL
+> DBAASPN_21686 
+AXYPV
+> DBAASPN_21687 
+TvPYXA
+> DBAASPN_21692 ASP2397
+NLfXXX
+> DBAASPN_21693 AS2524371
+NLlXXX
+> DBAASPN_21694 Aspergillicin A
+TxPPXV
+> DBAASPN_21695 Aspergillicin C
+TxPPXV
+> DBAASPN_21696 Aspergillicin H
+TvPPXV
+> DBAASPN_21709 Destruxin A
+PIXXX
+> DBAASPN_21710 Destruxin B
+PIXXX
+> DBAASPN_21711 Destruxin E
+PIXXX
+> DBAASPN_21712 PM181110
+CC
+> DBAASPN_21740 Xylomyrocin
+LXVXGISLX
+> DBAASPN_21741 Basifungin, Aureobasidin A
+XFXPiXLX
+> DBAASPN_21746 Persephacin
+XXXPXXLX
+> DBAASPN_21749 Ophiotine
+qTXwSf
+> DBAASPN_21750 Arthrichitin
+exS
+> DBAASPN_21751 Arthrichitin C
+xxS
+> DBAASPN_21761 Cyclo(Leu-Tyr)
+LY
+> DBAASPN_21765 Phaeosphamide A
+FPGxXIXVX
+> DBAASPN_21766 Microspinosamide
+aXPXXwRxTXvPd
+> DBAASPN_21767 Sclerotiotide L
+XXX
+> DBAASPN_21768 Sclerotiotide M
+XXX
+> DBAASPN_21769 Sclerotiotide N
+XXX
+> DBAASPN_21770 Sclerotiotide O
+XXX
+> DBAASPN_21771 Halovir A
+XXLVQ
+> DBAASPN_21772 Talarolide A
+AxXxaxX
+> DBAASPN_21780 Turnercyclamycin A
+XSVxXTGXxXAxE
+> DBAASPN_21781 Turnercyclamycin B
+XSVxXTGXxXAxE
+> DBAASPN_21784 Hemiasterlin A
+XXX
+> DBAASPN_22015 Penicillatide B, cyclo(Pro–2-OH–Phe)
+px
+> DBAASPN_22016 Exumolide B
+PLFFP
+> DBAASPN_22017 Exumolide A
+PXFFP
+> DBAASPN_22028 Lagunamide A
+AxXXX
+> DBAASPN_22029 Lagunamide B
+AxXXX
+> DBAASPN_22040 Mirabamide A
+GTXXxxGAXxX
+> DBAASPN_22041 Mirabamide B
+GTXXxxGAXxX
+> DBAASPN_22042 Mirabamide C
+GTXXxxGAXxX
+> DBAASPN_22043 Mirabamide D
+GTXXxxGAXxX
+> DBAASPN_22044 Papuamide A
+GTXXXxGAXxX
+> DBAASPN_22045 Mirabamide E
+GXXXxxGAXxX
+> DBAASPN_22046 Mirabamide F
+GXXXxxGAXxX
+> DBAASPN_22047 Mirabamide G
+GXXXxxGAXxX
+> DBAASPN_22048 Mirabamide H
+GXXXxxGAXxX
+> DBAASPN_22085 Bacipeptin
+HFDNLNKIQXNI
+> DBAASPN_22088 Acremotin A
+WXQXITXLXPQXXXPF
+> DBAASPN_22089 Acremotin B
+WXQXITXLXPQXXXXF
+> DBAASPN_22090 Acremotin C
+WXQXITXLXPQXXXXFG
+> DBAASPN_22091 Acremotin D
+WXQXITXLXPQXXXXFG
+> DBAASPN_22092 Acremotin, XR586
+WXQXITXLXPQXXXPFG
+> DBAASPN_22132 Chilenopeptin A
+XSWXPLXXQXXQXL
+> DBAASPN_22133 Chilenopeptin B
+XSFXPLXXQXXQXL
+> DBAASPN_22134 Tylopeptin A
+WVXxAQAXSXALXQ
+> DBAASPN_22135 Tylopeptin B
+WVXXAQAXSXALXQ
+> DBAASPN_22136 Unguisin A
+avFvawX
+> DBAASPN_22137 Asperversiamide A
+swSavFv
+> DBAASPN_22138 Asperversiamide B
+swAavFv
+> DBAASPN_22139 Asperversiamide C
+awSavFv
+> DBAASPN_22142 Asperheptatide A
+swSGvFv
+> DBAASPN_22143 Asperheptatide B
+awAavFv
+> DBAASPN_22144 Halicylindramide B
+aXPvXwRxTXfTNG
+> DBAASPN_22145 Halicylindramide C
+aXPvXwRxTXfTNX
+> DBAASPN_22146 Stellettapeptin A
+xxXXxxGLXxX
+> DBAASPN_22147 Stellettapeptin B
+GTXXxxGLXxX
+> DBAASPN_22149 Arthropeptide B
+LFAY
+> DBAASPN_22150 Asperopiperazine A
+FX
+> DBAASPN_22151 Asperopiperazine B
+xf
+> DBAASPN_22152 Etamycin, Viridogrisein
+TlxXXAX
+> DBAASPN_22153 Fijimycin A
+TlxXXAx
+> DBAASPN_22154 Fijimycin B
+TlxXXAX
+> DBAASPN_22155 Fijimycin C
+TlxXXSX
+> DBAASPN_22157 
+PFXXxX
+> DBAASPN_22158 
+PFxXxX
+> DBAASPN_22164 Lajollamide A
+LLLVX
+> DBAASPN_22167 Kahalalide R
+eVVVpXxxVVFXV
+> DBAASPN_22168 Kahalalide E
+aaLPLW
+> DBAASPN_22169 Peptidolipin B
+TVApxVX
+> DBAASPN_22170 Peptidolipin E
+TVApxVX
+> DBAASPN_22171 Kulokekahilede-2
+aXXIA
+> DBAASPN_22172 Caletasin
+LPVYX
+> DBAASPN_22173 Acremonpeptide A
+XXXSLF
+> DBAASPN_22174 Acremonpeptide B
+XXXALF
+> DBAASPN_22175 Acremonpeptide C
+XXXFLF
+> DBAASPN_22176 Acremonpeptide D
+XXXWLF
+> DBAASPN_22177 Al(III) - Acremonpeptide D
+XXXWLF
+> DBAASPN_22193 Rufomycin NBZ1
+XXAXLXX
+> DBAASPN_22194 Rufomycin NBZ3
+XXAXLXX
+> DBAASPN_22195 Rufomycin NBZ4
+XYAXLXX
+> DBAASPN_22196 Rufomycin NBZ5
+XXAXLXX
+> DBAASPN_22198 Cyclo(2-Hyp-Phe)
+xF
+> DBAASPN_22199 Rufomycin NBZ7
+XXAXLXX
+> DBAASPN_22200 Rufomycin NBZ8
+XXAXLXX
+> DBAASPN_22212 Acremonamide
+VXFX
+> DBAASPN_22254 Mortiamide A
+fFvvvLv
+> DBAASPN_22255 Mortiamide B
+fFvvvFv
+> DBAASPN_22256 Mortiamide C
+aIiviFi
+> DBAASPN_22257 Mortiamide D
+lFaiiFv
+> DBAASPN_22258 Auyuittuqamide A
+XVXGISVXGL
+> DBAASPN_22259 Auyuittuqamide B
+XVXGVSVXGL
+> DBAASPN_22260 Auyuittuqamide C
+XIXGISVXGL
+> DBAASPN_22261 Auyuittuqamide D
+XIXGISIXGL
+> DBAASPN_22402 Bingchamide A
+IFFXL
+> DBAASPN_22403 Bingchamide B
+IFFXL
+> DBAASPN_22404 Endolide A
+XLXV
+> DBAASPN_22405 Endolide B
+XXXV
+> DBAASPN_22745 Bogorol K
+XVxIIVkVVKyL
+> DBAASPN_22746 Bogorol L
+XVkIIVkVVKyL
+> DBAASPN_22747 Succilin K
+XVXIIVkVVKyL
+> DBAASPN_22805 Metamarin
+XXVXVXV
+> DBAASPN_22806 M10709
+XXAXVXV
+> DBAASPN_22825 Glidonin 1
+mnPVfPWvAaSA
+> DBAASPN_22826 Glidonin 2
+xnPVfPWvAaSA
+> DBAASPN_22827 Glidonin 4
+mnPVfPWvAaSA
+> DBAASPN_22828 Glidonin 6
+mnPVfPWvAaSA
+> DBAASPN_22829 Glidonin 7
+mnPVfPWvAaSA
+> DBAASPN_22830 Glidonin 8
+xnPVfPWvAaSA
+> DBAASPN_22831 Glidonin 9
+lnPVfPWvAaSA
+> DBAASPN_22832 Glidonin 10
+mnPVfPWvAaSA
+> DBAASPN_22833 Glidonin 10a
+mnPVfPWvAaSA
+> DBAASPN_22838 Holrhizin A
+VFEIAI
+> DBAASPN_22839 Pentadecaibin 1
+XGALXQXVXAXXXQ
+> DBAASPN_22840 Pentadecaibin 2
+XGALXQXLXAXXXQ
+> DBAASPN_22841 Pentadecaibin 3
+XGALXQxVXAXXXQ
+> DBAASPN_22842 Pentadecaibin 4
+XGALXQxLXAXXXQ
+> DBAASPN_22843 Pentadecaibin 5
+XGALxQxVXAXXXQ
+> DBAASPN_23179 Aspergillipeptide E
+yWv
+> DBAASPN_23201 Hirsutide
+XFXV
+> DBAASPN_23278 Bacillomycin like AF3
+NPYNQTSX
+> DBAASPN_23279 Bacillomycin like AF4
+NPYNQTSX
+> DBAASPN_23280 Bacillomycin like AF5
+NPYNQTSX
+> DBAASPN_23304 Rhodopeptin C1
+GXVX
+> DBAASPN_23305 Rhodopeptin C2
+GXIx
+> DBAASPN_23306 Rhodopeptin C4
+GXVx
+> DBAASPN_23307 Bacillomycin D(iso-C17)
+NynPEsTx
+> DBAASPN_23311 Iturin F1
+xNynQXnS
+> DBAASPN_23312 Iturin F2
+xNynQXnS
+> DBAASPN_23313 Iturin A9
+xNynQPnS
+> DBAASPN_23314 Iturin A8
+xNynQPnS
+> DBAASPN_23315 Majusculamide C
+GXGXXXAX
+> DBAASPN_23316 Majusculamide D
+XXXX
+> DBAASPN_23317 Axinastatin 5
+ILPPYVPL
+> DBAASPN_23318 Hymenistatin I
+IIPPYVPL
+> DBAASPN_23319 Minutissamide E
+XVXTTQaXXP
+> DBAASPN_23320 Minutissamide K
+XVXTTQGXXP
+> DBAASPN_23321 Minutissamide L
+XVXTVQGXXP
+> DBAASPN_23322 Minutissamide H
+XVXTVQaXXP
+> DBAASPN_23323 Trichormamide C
+xVxAxQXnTPlT
+> DBAASPN_23324 Trichormamide D
+xQXPSylVfLG
+> DBAASPN_23325 Trichormamide B
+xIxXxQXsTPyT
+> DBAASPN_23326 Trichormamide A
+xSSPSylIIPG
+> DBAASPN_23327 Laxaphycin B
+xVXAxQXxTPlT
+> DBAASPN_23328 Laxaphycin A
+xXXXXflIxLG
+> DBAASPN_23329 [L-Val8] Laxaphycin A
+xXXXXflIVLG
+> DBAASPN_23744 Surugamide G
+aViKIflV
+> DBAASPN_23745 Surugamide J
+aVvKVfvV
+> DBAASPN_23746 Acyl-surugamide A
+aIiXIflI
+> DBAASPN_24162 Odilorhabdin NOSO-95C
+KXXGxPHKXK
+> DBAASPN_24163 Romidepsin, Istodax, FR901228
+vcXV
+> DBAASPN_24244 ADEP 1, Antibiotic A 54556A
+FSPXAX
+> DBAASPN_24245 ADEP 2
+XSPXAX
+> DBAASPN_24247 ADEP 4
+XSPXAX
+> DBAASPN_24264 ADEP 2, Antibiotic A 54556B
+FSPXAP
+> DBAASPN_24265 Enopeptin A
+FSPXAX
+> DBAASPN_24266 Enopeptin B
+FSPXAP
+> DBAASPN_24351 Fellutamide
+NQ
+> DBAASPN_25059 Sanxiapeptin
+XXtXS
+> DBAASPN_25221 Cinnamosyn
+XFlVAxGPXL
+> DBAASPN_25222 Cilagicin
+sTxDGndGYVXF
+> DBAASPN_25254 Cinnapeptin
+xfLykXSYxX
+> DBAASPN_25272 Cyclo(D-Phe-L-Hyp)
+fX
+> DBAASPN_25273 Cyclo(L-Hyp-L-Tyr)
+XY
+> DBAASPN_25283 Cyclo(2-OH-D-Pro-L-Leu)
+xL
+> DBAASPN_25284 Cyclo(2-OOH-D-Pro-L-Leu), Actinozine A
+xL
+> DBAASPN_25285 Atratumycin
+TSWnXPvGly
+> DBAASPN_25286 Atratumycin B
+TSWnXPvGly
