@@ -4,26 +4,31 @@ overlap_analysis.py
 Analyses the overlap between AMP source databases (APD, DRAMP, dbAMP,
 DBAASP, AMPDB) for the standard ABPs in the complete dataset, producing
 a three-panel Venn diagram distinguishing the aggregated set and the
-natural and synthetic subpopulations.
+natural and synthetic subpopulations, and a per-database curation-counts
+table.
 
 Natural/synthetic membership for APD, DRAMP and DBAASP is read from
 per-database FASTA files; for dbAMP it is read from a CSV and filtered on
-the "Source" column, where only synthetic membership is provided.
-AMPDB has no natural/synthetic classification and is therefore
-excluded from the natural and synthetic panels.
+the "Source" column (entries containing "synthetic" or "newly-designed"),
+where only synthetic membership is provided. AMPDB has no natural/synthetic
+classification and is therefore excluded from the natural and synthetic
+panels. Sequences are stripped and uppercased before matching, to be
+consistent with complete_dataset.csv.
 
 Expected project layout (paths relative to project root):
     data/processed/complete_dataset.csv                    -- output of annotate_dataset.py
     data/raw/natural_and_synthetic_amps/
         apd_natural.fasta, apd_synthetic.fasta
         dramp_natural.fasta, dramp_synthetic.fasta
-        dbamp_all.csv
+        dbamp_all.csv                                      -- ";"-delimited, needs Source + Seq
         dbaasp_ribosomal_1.fasta, dbaasp_ribosomal_2.fasta, dbaasp_non_ribosomal.fasta
         dbaasp_synthetic_*.fasta
 
-Output figures (PNG + PDF) are written to:
-    results/sequences_analysis/
-      overlap_abps/
+Output:
+    results/sequences_analysis/overlap_abps/venn_all_natural_synthetic.[png|pdf]
+    a per-database table printed to stdout with the columns Post-processing,
+    Non-standard, Standard, Natural and Synthetic (all computed from the
+    files above; "--" where a database has no such classification)
 
 Run from the project root:
     python scripts/overlap_analysis.py
@@ -244,3 +249,38 @@ for ax, letter in zip(axes, "ABC"):
 
 save_figure(fig, "overlap_abps", "venn_all_natural_synthetic")
 plt.close(fig)
+
+
+# ---------------------------------------------------------------------------
+# Table – per-database curation counts
+# ---------------------------------------------------------------------------
+
+print("\n=== Table: per-database curation counts ===")
+
+df_all_abps = complete_dataset[complete_dataset["ABP_from_databases"]]
+
+def fmt(n):
+    return f"{n:,}" if n is not None else "--"
+
+headers = ["Database", "Post-processing", "Non-standard", "Standard", "Natural", "Synthetic"]
+table_rows = [headers]
+for db in amp_databases:
+    post_processing = df_all_abps[df_all_abps[f"{db}_ID"].notna()]["Sequence"].nunique()
+    standard        = len(venn_sets[db])
+    natural         = len(venn_sets_natural[db])   if db in venn_sets_natural   else None
+    synthetic       = len(venn_sets_synthetic[db]) if db in venn_sets_synthetic else None
+    table_rows.append([db, fmt(post_processing), fmt(post_processing - standard),
+                       fmt(standard), fmt(natural), fmt(synthetic)])
+
+col_widths = [max(len(row[c]) for row in table_rows) for c in range(len(headers))]
+
+def print_row(row):
+    print("  ".join([row[0].ljust(col_widths[0])] +
+                    [row[c].rjust(col_widths[c]) for c in range(1, len(row))]))
+
+print_row(table_rows[0])
+print("  ".join("-" * w for w in col_widths))
+for row in table_rows[1:]:
+    print_row(row)
+
+print("\nDone.")
