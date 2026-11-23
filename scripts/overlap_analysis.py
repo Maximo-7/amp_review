@@ -21,8 +21,8 @@ Expected project layout (paths relative to project root):
         apd_natural.fasta, apd_synthetic.fasta
         dramp_natural.fasta, dramp_synthetic.fasta
         dbamp_all.csv                                      -- ";"-delimited, needs Source + Seq
-        dbaasp_ribosomal_1.fasta, dbaasp_ribosomal_2.fasta, dbaasp_non_ribosomal.fasta
-        dbaasp_synthetic_*.fasta
+        dbaasp_ribosomal.fasta, dbaasp_non_ribosomal.fasta
+        dbaasp_synthetic.fasta
 
 Output:
     results/sequences_analysis/overlap_abps/venn_all_natural_synthetic.[png|pdf]
@@ -142,17 +142,16 @@ df_dbamp_synthetic = strip_upper_unique_by_sequence(
 
 # -- DBAASP --
 dbaasp_natural_files = [
-    NAT_AND_SYN / "dbaasp_ribosomal_1.fasta",
-    NAT_AND_SYN / "dbaasp_ribosomal_2.fasta",
+    NAT_AND_SYN / "dbaasp_ribosomal.fasta",
     NAT_AND_SYN / "dbaasp_non_ribosomal.fasta",
 ]
-dbaasp_synthetic_files = sorted(NAT_AND_SYN.glob("dbaasp_synthetic_*.fasta"))
+dbaasp_synthetic_file = [NAT_AND_SYN / "dbaasp_synthetic.fasta"]
 
 df_dbaasp_natural = strip_upper_unique_by_sequence(
     pd.concat([fasta_to_df_utf_8(f) for f in dbaasp_natural_files], ignore_index=True)
 )
 df_dbaasp_synthetic = strip_upper_unique_by_sequence(
-    pd.concat([fasta_to_df_utf_8(f) for f in dbaasp_synthetic_files], ignore_index=True)
+    pd.concat([fasta_to_df_utf_8(f) for f in dbaasp_synthetic_file], ignore_index=True)
 )
 
 # ---------------------------------------------------------------------------
